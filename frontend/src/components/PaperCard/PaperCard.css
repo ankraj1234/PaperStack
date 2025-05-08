@@ -68,7 +68,6 @@
     position: relative;
   }
   
-  /* Adds a fading effect at the bottom of truncated text */
   .paper-card-abstract::after {
     content: "";
     position: absolute;
@@ -89,10 +88,10 @@
   .paper-card-actions {
     display: flex;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: auto; /* Pushes the actions to the bottom */
     flex-wrap: wrap;
-  }
-  
+}
+
   .status-button,
   .action-button {
     display: flex;
@@ -121,7 +120,7 @@
   .action-button:hover {
     background-color: #d2e3fc;
   }
-  
+
   .grid-view .paper-card-abstract {
     display: none;
   }
