@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .models import Paper, Author, PaperAuthors, Tags, PaperTags
 from fastapi.middleware.cors import CORSMiddleware
+from .utils.keyword_extraction import extract_keyword
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import date, datetime
@@ -121,6 +122,41 @@ def parse_tei(xml_data):
         "publication_date": pub_date
     }
 
+# @app.post("/extract/")
+# async def extract_fulltext(file: UploadFile = File(...)):
+#     # 1. Save uploaded file
+#     tmp_path = os.path.join(UPLOAD_DIR, file.filename)
+#     file_bytes = await file.read()
+#     with open(tmp_path, "wb") as out:
+#         out.write(file_bytes)
+
+#     # 2. Compute hash (optional but useful for duplicate detection on frontend)
+#     pdf_hash = hashlib.sha256(file_bytes).hexdigest()
+
+#     # 3. Send to Grobid
+#     try:
+#         resp = requests.post(
+#             GROBID_URL,
+#             files={"input": ("filename", file_bytes, "application/pdf")},
+#             timeout=120
+#         )
+#     except Exception as e:
+#         raise HTTPException(status_code=502, detail=str(e))
+
+#     if not resp.ok:
+#         raise HTTPException(status_code=502, detail="Grobid error: " + resp.text[:200])
+
+#     # 4. Parse TEI‑XML
+#     data = parse_tei(resp.content)
+
+#     # 5. Return metadata (don't store anything in DB)
+#     return JSONResponse(content={
+#         **data,
+#         "pdf_hash": pdf_hash,  
+#         "pdf_filename": file.filename 
+#     })  
+
+
 @app.post("/extract/")
 async def extract_fulltext(file: UploadFile = File(...)):
     # 1. Save uploaded file
@@ -129,7 +165,7 @@ async def extract_fulltext(file: UploadFile = File(...)):
     with open(tmp_path, "wb") as out:
         out.write(file_bytes)
 
-    # 2. Compute hash (optional but useful for duplicate detection on frontend)
+    # 2. Compute hash
     pdf_hash = hashlib.sha256(file_bytes).hexdigest()
 
     # 3. Send to Grobid
@@ -148,12 +184,22 @@ async def extract_fulltext(file: UploadFile = File(...)):
     # 4. Parse TEI‑XML
     data = parse_tei(resp.content)
 
-    # 5. Return metadata (don't store anything in DB)
+    # 5. If keywords are missing, extract from abstract
+    if not data.get("keywords") and data.get("abstract"):
+        try:
+            extracted = extract_keyword(data["abstract"])
+            if extracted:
+                data["keywords"] = extracted
+        except Exception as e:
+            print("⚠️ Keyword extraction failed:", e)
+
+    # 6. Return full response
     return JSONResponse(content={
         **data,
-        "pdf_hash": pdf_hash,  # Optional: helps frontend check duplication
-        "pdf_filename": file.filename  # Optional: useful for reupload on submit
-    })  
+        "pdf_hash": pdf_hash,
+        "pdf_filename": file.filename
+    })
+
 
 @app.post("/add-paper/")
 async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
@@ -278,4 +324,5 @@ async def update_favourite_status(
     except Exception as e:
         print("❌ Exception occurred:", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 

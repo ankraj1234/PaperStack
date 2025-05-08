@@ -19,13 +19,6 @@ function Sidebar({
     { id: "completed", name: "Completed", icon: "✅" }
   ];
   
-  const tags = [
-    { id: "transformers", name: "Transformers", count: 2 },
-    { id: "attention", name: "Attention Mechanism", count: 1 },
-    { id: "bert", name: "BERT", count: 1 },
-    { id: "cnn", name: "CNN", count: 2 },
-    { id: "gan", name: "Generative Models", count: 1 }
-  ];
   
   return (
     <div className="sidebar">
@@ -59,22 +52,6 @@ function Sidebar({
         </ul>
       </div>
       
-      <div className="sidebar-section">
-        <h2 className="sidebar-section-title">TAGS</h2>
-        <ul className="sidebar-list">
-          {tags.map(tag => (
-            <li 
-              key={tag.id} 
-              className={`sidebar-list-item ${selectedTag === tag.name && !showFavoritesOnly ? 'active' : ''}`}
-              onClick={() => onTagSelect(tag.name)}
-            >
-              <span className="sidebar-item-icon">🏷️</span>
-              <span className="sidebar-item-name">{tag.name}</span>
-              <span className="sidebar-item-count">{tag.count}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
