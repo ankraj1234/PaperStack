@@ -61,7 +61,7 @@ function PapersList({
           <div className="no-papers">No papers found</div>
         ) : (
           validPapers.map(paper => {
-            console.log("Rendering PaperCard with:", paper);
+            // console.log("Rendering PaperCard with:", paper);
             return (
               <PaperCard 
                 key={paper.paper_id} 

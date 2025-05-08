@@ -87,7 +87,22 @@ function AddPaperForm({ onAddPaper, onCancel }) {
     try {
       const response = await axios.post('http://localhost:8000/add-paper/', newPaper);
       console.log('Paper added successfully:', response.data);
-      onAddPaper(newPaper); // Notify parent component about the new paper
+      console.log('New Paper that is passed',newPaper);
+
+      const newPaper1 = {
+        title: newPaper.title,
+        abstract: newPaper.abstract,
+        publication_date: newPaper.publication_date,
+        pdf_filename: newPaper.pdf_filename,
+        pdf_hash: newPaper.pdf_hash,
+        authors: newPaper.authors,
+        keywords: newPaper.keywords,
+        addedDate: new Date().toISOString(),  
+        isFavourite: false,
+        status: "Unread"
+      }
+
+      onAddPaper(newPaper1); // Notify parent component about the new paper
       onCancel(); // Close the form
     } catch (error) {
       console.error('Error adding paper:', error);
