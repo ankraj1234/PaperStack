@@ -64,6 +64,9 @@ class UpdateFavouriteStatus(BaseModel):
     paper_id: int
     isFavourite: bool  
 
+class UpdateStatus(BaseModel):
+    paper_id: int
+    new_status: str
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -120,41 +123,7 @@ def parse_tei(xml_data):
         "keywords": keywords,
         "authors": authors,
         "publication_date": pub_date
-    }
-
-# @app.post("/extract/")
-# async def extract_fulltext(file: UploadFile = File(...)):
-#     # 1. Save uploaded file
-#     tmp_path = os.path.join(UPLOAD_DIR, file.filename)
-#     file_bytes = await file.read()
-#     with open(tmp_path, "wb") as out:
-#         out.write(file_bytes)
-
-#     # 2. Compute hash (optional but useful for duplicate detection on frontend)
-#     pdf_hash = hashlib.sha256(file_bytes).hexdigest()
-
-#     # 3. Send to Grobid
-#     try:
-#         resp = requests.post(
-#             GROBID_URL,
-#             files={"input": ("filename", file_bytes, "application/pdf")},
-#             timeout=120
-#         )
-#     except Exception as e:
-#         raise HTTPException(status_code=502, detail=str(e))
-
-#     if not resp.ok:
-#         raise HTTPException(status_code=502, detail="Grobid error: " + resp.text[:200])
-
-#     # 4. Parse TEI‑XML
-#     data = parse_tei(resp.content)
-
-#     # 5. Return metadata (don't store anything in DB)
-#     return JSONResponse(content={
-#         **data,
-#         "pdf_hash": pdf_hash,  
-#         "pdf_filename": file.filename 
-#     })  
+    } 
 
 
 @app.post("/extract/")
@@ -326,3 +295,21 @@ async def update_favourite_status(
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.post("/api/updateStatus")
+async def update_status(
+    update: UpdateStatus,
+    db: Session = Depends(get_db)
+):
+    try:
+        paper = db.query(Paper).filter(Paper.paper_id == update.paper_id).first()
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+
+        paper.current_status = update.new_status
+        db.commit()
+        db.refresh(paper)
+        return {"message": f"Reading status updated to '{update.new_status}' successfully"}
+    
+    except Exception as e:
+        print("Exception occurred:", e)
+        return JSONResponse(status_code=500, content={"error": str(e)})
