@@ -7,6 +7,7 @@
     flex-direction: column;
     gap: 8px;
     transition: box-shadow 0.2s ease-in-out;
+    position: relative;
   }
   
   .paper-card:hover {
@@ -177,8 +178,12 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #999; /* default colorless */
+    color: #999; 
     transition: color 0.3s ease;
+  }
+  .delete-button svg {
+    width: 20px;
+    height: 20px;
   }
   
   .favorite-button.favourite-active {

@@ -316,3 +316,14 @@ async def update_status(
     except Exception as e:
         print("Exception occurred:", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+
+@app.delete("/papers/{paper_id}")
+def delete_paper(paper_id: int, db: Session = Depends(get_db)):
+    paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+
+    db.delete(paper)
+    db.commit()
+    return {"message": f"Paper {paper_id} deleted successfully"}

@@ -10,6 +10,7 @@ function PapersList({
   onSortChange = () => {},
   toggleFavorite = () => {},
   updatePaperStatus = () => {},
+  deletePaper
 }) {
   const validPapers = Array.isArray(papers) ? papers : [];
 
@@ -69,6 +70,7 @@ function PapersList({
                 viewMode={viewMode} 
                 toggleFavorite={toggleFavorite} 
                 updatePaperStatus={updatePaperStatus}
+                deletePaper={deletePaper} 
               />
             );
           })

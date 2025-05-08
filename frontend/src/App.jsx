@@ -47,7 +47,7 @@ function App() {
       console.log('Request Payload:', JSON.stringify(requestPayload));
   
       const response = await fetch('http://127.0.0.1:8000/api/updateFavouriteStatus', {
-        method: 'POST',  // Change this to POST
+        method: 'POST', 
         headers: {
           'Content-Type': 'application/json',
         },
@@ -79,7 +79,21 @@ function App() {
     );
   };
   
-  
+  const deletePaper = async (paperId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/papers/${paperId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setPapers(prev => prev.filter(paper => paper.paper_id !== paperId));
+      } else {
+        console.error("Failed to delete paper");
+      }
+    } catch (error) {
+      console.error("Error occurred while deleting paper:", error);
+    }
+  };
+
   const filteredPapers = papers.filter((paper) => {
     if (selectedStatus && selectedStatus !== 'All Papers' && paper.status !== selectedStatus) {
       return false;
@@ -193,6 +207,7 @@ function App() {
           onSortChange={handleSortChange}
           toggleFavorite={toggleFavorite}
           updatePaperStatus={updatePaperStatus}
+          deletePaper={deletePaper}
         />
       </div>
     </div>
