@@ -71,7 +71,13 @@ function App() {
     }
   };
   
-  
+  const updatePaperStatus = (paperId, newStatus) => {
+    setPapers(prevPapers =>
+      prevPapers.map(p =>
+        p.paper_id === paperId ? { ...p, status: newStatus } : p
+      )
+    );
+  };
   
   
   const filteredPapers = papers.filter((paper) => {
@@ -186,6 +192,7 @@ function App() {
           sortOrder={sortOrder}
           onSortChange={handleSortChange}
           toggleFavorite={toggleFavorite}
+          updatePaperStatus={updatePaperStatus}
         />
       </div>
     </div>

@@ -9,6 +9,7 @@ function PapersList({
   sortOrder = 'Date Added',
   onSortChange = () => {},
   toggleFavorite = () => {},
+  updatePaperStatus = () => {},
 }) {
   const validPapers = Array.isArray(papers) ? papers : [];
 
@@ -59,15 +60,6 @@ function PapersList({
         {validPapers.length === 0 ? (
           <div className="no-papers">No papers found</div>
         ) : (
-          // validPapers.map(paper => (
-          //   <PaperCard 
-          //     key={paper.paper_id || paper.id}
-          //     paper={paper}
-          //     viewMode={viewMode}
-          //     toggleFavorite={toggleFavorite}
-          //   />
-          // ))
-
           validPapers.map(paper => {
             console.log("Rendering PaperCard with:", paper);
             return (
@@ -76,6 +68,7 @@ function PapersList({
                 paper={paper} 
                 viewMode={viewMode} 
                 toggleFavorite={toggleFavorite} 
+                updatePaperStatus={updatePaperStatus}
               />
             );
           })
