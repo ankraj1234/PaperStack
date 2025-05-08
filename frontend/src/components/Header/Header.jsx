@@ -1,7 +1,50 @@
+// import React from 'react';
+// import './Header.css';
+
+// function Header({ onAddPaperClick, sortOrder }) {
+//   return (
+//     <header className="header">
+//       <div className="header-left">
+//         <button className="menu-button">
+//           <i className="menu-icon">≡</i>
+//         </button>
+//         <div className="logo">
+//           <i className="logo-icon">📄</i>
+//           <span className="logo-text">PaperOrganizer</span>
+//         </div>
+//       </div>
+//       <div className="search-container">
+//         <input 
+//           type="text" 
+//           className="search-input" 
+//           placeholder="Search papers, authors, journals..." 
+//         />
+//       </div>
+//       <div className="header-right">
+//         {/* Attach onAddPaperClick to the Add Paper button */}
+//         <button className="add-paper-button" onClick={onAddPaperClick}>
+//           <i className="add-icon">+</i>
+//           <span>Add Paper</span>
+//         </button>
+//       </div>
+//     </header>
+//   );
+// }
+
+// export default Header;
+
+
+
+
+
 import React from 'react';
 import './Header.css';
 
-function Header({ onAddPaperClick, sortOrder }) {
+function Header({ onAddPaperClick, sortOrder, searchQuery, setSearchQuery }) {
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
     <header className="header">
       <div className="header-left">
@@ -18,10 +61,19 @@ function Header({ onAddPaperClick, sortOrder }) {
           type="text" 
           className="search-input" 
           placeholder="Search papers, authors, journals..." 
+          value={searchQuery}
+          onChange={handleSearchChange}
         />
+        {searchQuery && (
+          <button 
+            className="clear-search-button"
+            onClick={() => setSearchQuery('')}
+          >
+            ×
+          </button>
+        )}
       </div>
       <div className="header-right">
-        {/* Attach onAddPaperClick to the Add Paper button */}
         <button className="add-paper-button" onClick={onAddPaperClick}>
           <i className="add-icon">+</i>
           <span>Add Paper</span>
