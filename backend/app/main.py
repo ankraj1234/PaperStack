@@ -44,7 +44,7 @@ class AuthorOutput(BaseModel):
         orm_mode = True
 
 class PaperOutput(BaseModel):
-    id : int
+    paper_id : int
     title: str
     authors: List[AuthorOutput]
     abstract: Optional[str]
@@ -180,7 +180,7 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
             pdf_path=pdf_path,
             pdf_hash=payload.pdf_hash,
             current_status="Unread",
-            isFavourite="false"
+            isFavourite=False
         )
         db.add(paper)
         db.commit()
@@ -241,7 +241,7 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
 
 def to_paper_output(paper: Paper) -> PaperOutput:
     return PaperOutput(
-        id = paper.paper_id,
+        paper_id = paper.paper_id,
         title=paper.title,
         authors=[AuthorOutput(name=author.name) for author in paper.authors],
         abstract=paper.abstract,

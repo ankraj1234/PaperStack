@@ -2,7 +2,7 @@ import React from 'react';
 import Tag from '../Tag/Tag';
 import './PaperCard.css';
 
-function PaperCard({ paper, viewMode }) {
+function PaperCard({ paper, viewMode, toggleFavorite }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'Unread':
@@ -29,8 +29,12 @@ function PaperCard({ paper, viewMode }) {
           <span className="status-icon">{getStatusIcon(paper.status)}</span>
           <span className="status-text">{paper.status}</span>
         </div>
-        <button className="favorite-button">
-          {paper.isFavorite ? '★' : '☆'}
+        <button 
+          className="favorite-button" 
+          onClick={() => toggleFavorite(paper.paper_id)}
+          style={{ color: paper.isFavourite ? 'gold' : 'gray' }}
+        >
+          {paper.isFavourite ? '★' : '☆'}
         </button>
       </div>
 

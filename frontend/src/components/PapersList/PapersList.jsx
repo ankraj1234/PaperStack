@@ -59,14 +59,26 @@ function PapersList({
         {validPapers.length === 0 ? (
           <div className="no-papers">No papers found</div>
         ) : (
-          validPapers.map(paper => (
-            <PaperCard 
-              key={paper.paper_id || paper.id}
-              paper={paper}
-              viewMode={viewMode}
-              toggleFavorite={toggleFavorite}
-            />
-          ))
+          // validPapers.map(paper => (
+          //   <PaperCard 
+          //     key={paper.paper_id || paper.id}
+          //     paper={paper}
+          //     viewMode={viewMode}
+          //     toggleFavorite={toggleFavorite}
+          //   />
+          // ))
+
+          validPapers.map(paper => {
+            console.log("Rendering PaperCard with:", paper);
+            return (
+              <PaperCard 
+                key={paper.paper_id} 
+                paper={paper} 
+                viewMode={viewMode} 
+                toggleFavorite={toggleFavorite} 
+              />
+            );
+          })
         )}
       </div>
     </div>
