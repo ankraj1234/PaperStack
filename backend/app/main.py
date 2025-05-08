@@ -68,6 +68,9 @@ class UpdateStatus(BaseModel):
     paper_id: int
     new_status: str
 
+class PaperIDResponse(BaseModel):
+    paper_id: int
+
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -170,7 +173,7 @@ async def extract_fulltext(file: UploadFile = File(...)):
     })
 
 
-@app.post("/add-paper/")
+@app.post("/add-paper/", response_model=PaperIDResponse)
 async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
     try:
         # Print the received payload for debugging
@@ -239,7 +242,7 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
         db.commit()
         
         # Return a consistent response format
-        return {"message": "Paper successfully added", "paper_id": paper.paper_id}
+        return {"paper_id": paper.paper_id}
     
     except HTTPException as e:
         # Rollback in case of HTTP exception

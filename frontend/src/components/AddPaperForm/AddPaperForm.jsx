@@ -90,6 +90,7 @@ function AddPaperForm({ onAddPaper, onCancel }) {
       console.log('New Paper that is passed',newPaper);
 
       const newPaper1 = {
+        paper_id:response.data.paper_id,
         title: newPaper.title,
         abstract: newPaper.abstract,
         publication_date: newPaper.publication_date,
