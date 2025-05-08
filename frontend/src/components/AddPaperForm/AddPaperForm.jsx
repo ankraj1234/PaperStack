@@ -195,55 +195,6 @@ function AddPaperForm({ onAddPaper, onCancel }) {
             />
           </div>
 
-          {/* Publication and Journal */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="publicationDate">Publication Date</label>
-              <input
-                type="date"
-                id="publicationDate"
-                name="publicationDate"
-                value={formData.publicationDate}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="journal">Journal/Conference</label>
-              <input
-                type="text"
-                id="journal"
-                name="journal"
-                value={formData.journal}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          {/* DOI and PDF URL */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="doi">DOI</label>
-              <input
-                type="text"
-                id="doi"
-                name="doi"
-                value={formData.doi}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="pdfUrl">PDF URL</label>
-              <input
-                type="url"
-                id="pdfUrl"
-                name="pdfUrl"
-                value={formData.pdfUrl}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
           {/* Tags Section */}
           <div className="form-group">
             <label htmlFor="tags">Tags</label>
@@ -257,27 +208,27 @@ function AddPaperForm({ onAddPaper, onCancel }) {
             />
           </div>
 
-          {/* Collections Section */}
-          <div className="form-group">
-            <label htmlFor="collections">Collections</label>
-            <input
-              type="text"
-              id="collections"
-              name="collections"
-              value={formData.collections}
-              onChange={handleChange}
-              placeholder="Separate collections with commas"
-            />
-          </div>
+          {/* Publication and Buttons */}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="publicationDate">Publication Date</label>
+              <input
+                type="date"
+                id="publicationDate"
+                name="publicationDate"
+                value={formData.publicationDate}
+                onChange={handleChange}
+              />
+            </div>
 
-          {/* Buttons */}
-          <div className="form-buttons">
-            <button type="button" onClick={onCancel} className="cancel-button">
-              Cancel
-            </button>
-            <button type="submit" className="submit-button">
-              Add Paper
-            </button>
+            <div className="form-buttons">
+              <button type="button" onClick={onCancel} className="cancel-button">
+                Cancel
+              </button>
+              <button type="submit" className="submit-button">
+                Add Paper
+              </button>
+            </div>
           </div>
         </form>
       </div>
