@@ -23,7 +23,7 @@ class KeywordExtractorCrew:
             role="Academic Keyword Extractor",
             goal="""
                 You are an expert in identifying and extracting the most important keywords from academic text, such as abstracts, introductions, or full papers.
-                Your objective is to extract exactly 5 high-quality, domain-relevant keywords or keyphrases.
+                Your objective is to extract exactly 3 high-quality, domain-relevant keywords or keyphrases.
                 Rank them by decreasing importance based on context, domain relevance, and thematic centrality.
             """,
             backstory="""
@@ -38,16 +38,18 @@ class KeywordExtractorCrew:
     def keyword_extraction_task(self, agent, input_text: str):
         return Task(
             description=f"""
-                Given the following academic text (e.g., an abstract), extract exactly 5 keywords or keyphrases that best capture its central themes.
+                Given the following academic text (e.g., an abstract), extract exactly 3 keywords or keyphrases that best capture its central themes.
 
                 - The keywords must be sorted in **decreasing order of importance**.
                 - Avoid general or overly broad terms like "study", "research", or "method".
                 - Focus on meaningful technical or topical terms.
                 - You may use multi-word keyphrases (e.g., "convolutional neural networks") but try to keep it short
+                - Avoid repetative keywords (e.g. cnn and convolutional neural network) 
+                - if standard abbreviations exist use then in caps
 
                 Return the keywords as a simple JSON list of strings like this:
                 ```json
-                ["most important keyword", "second keyword", ..., "fifth keyword"]
+                ["most important keyword", "second keyword", "third keyword"]
                 ```
 
                 Input Academic Text:
