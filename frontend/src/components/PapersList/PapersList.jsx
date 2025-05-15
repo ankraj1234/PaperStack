@@ -1,5 +1,5 @@
 import React from 'react';
-import PaperCard from '../PaperCard/PaperCard'; // Make sure this path is correct
+import PaperCard from '../PaperCard/PaperCard'; 
 import './PapersList.css';
 
 function PapersList({
@@ -62,7 +62,6 @@ function PapersList({
           <div className="no-papers">No papers found</div>
         ) : (
           validPapers.map(paper => {
-            // console.log("Rendering PaperCard with:", paper);
             return (
               <PaperCard 
                 key={paper.paper_id} 

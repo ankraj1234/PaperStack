@@ -9,7 +9,6 @@ from langchain_groq import ChatGroq
 
 os.environ['GROQ_API_KEY'] = "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"
 
-# === Init your processor ===
 from crewai import Agent, Task
 
 class KeywordExtractorCrew:

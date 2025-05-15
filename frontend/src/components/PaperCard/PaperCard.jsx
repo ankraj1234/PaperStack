@@ -4,7 +4,7 @@ import './PaperCard.css';
 import axios from 'axios';
 
 function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deletePaper }) {
-  // Use the passed updatePaperStatus function, no need to define it here
+  
   const getStatusIcon = (paperStatus) => {
     switch (paperStatus) {
       case 'Unread':
@@ -29,7 +29,7 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
     try {
       const response = await axios.post(
         'http://127.0.0.1:8000/api/updateStatus', 
-        payload,  // No need to stringify as axios handles it automatically
+        payload,  
         {
           headers: {
             'Content-Type': 'application/json'

@@ -108,14 +108,12 @@ function AddPaperForm({ onAddPaper, onCancel }) {
     } catch (error) {
       console.error('Error adding paper:', error);
       
-      // Add detailed logging to understand the error structure
       if (error.response) {
         console.log('Full error response:', error.response);
         console.log('Status code:', error.response.status);
         console.log('Response data type:', typeof error.response.data);
         console.log('Response data:', error.response.data);
-        
-        // Stringify the entire response for debugging
+       
         const errorStr = JSON.stringify(error.response.data, null, 2);
         console.log('Stringified error:', errorStr);
         
@@ -129,7 +127,6 @@ function AddPaperForm({ onAddPaper, onCancel }) {
           } else if (error.response.data && error.response.data.message) {
             errorMessage = error.response.data.message;
           } else {
-            // This will handle the [object Object] issue
             errorMessage = JSON.stringify(error.response.data);
           }
         } catch (e) {
