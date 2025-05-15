@@ -15,7 +15,7 @@ class Paper(Base):
     abstract = Column(String(10000))
     publication_date = Column(Date)
     pdf_path = Column(String(255))
-    added_on = Column(DateTime, default=datetime.utcnow)  # Using DateTime with current timestamp
+    added_on = Column(DateTime, default=datetime.utcnow)  
     pdf_hash = Column(String(64), unique=True, nullable=False)  # 64 characters for SHA-256 hex
     current_status = Column(String(255))
     isFavourite = Column(Boolean, default=False)

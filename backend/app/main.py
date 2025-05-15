@@ -1,14 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import SessionLocal
+from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput
 from .models import Paper, Author, PaperAuthors, Tags, PaperTags
-from fastapi.middleware.cors import CORSMiddleware
 from .utils.keyword_extraction import extract_keyword
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from datetime import date, datetime
+from typing import List
+from pydantic import Field
 import xml.etree.ElementTree as ET
 import os
 import requests
@@ -20,56 +20,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend origin
+    allow_origins=["http://localhost:3000"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class AuthorInput(BaseModel):
-    name: str
-
-class PaperInput(BaseModel):
-    title: str
-    abstract: Optional[str] = None
-    publication_date: Optional[date] = None
-    pdf_filename: str  # From uploaded file
-    pdf_hash: str
-    authors: List[AuthorInput]
-    keywords: List[str]
-
-class AuthorOutput(BaseModel):
-    name: str
-
-    class Config:
-        orm_mode = True
-
-class PaperOutput(BaseModel):
-    paper_id : int
-    title: str
-    authors: List[AuthorOutput]
-    abstract: Optional[str]
-    status : str
-    keywords: Optional[List[str]] = []
-    #collections : Optional[List[str]]
-    isFavourite : bool
-    addedDate : datetime
-    publication_date: Optional[date]
-
-    class Config:
-        orm_mode = True
-
-
-class UpdateFavouriteStatus(BaseModel):
-    paper_id: int
-    isFavourite: bool  
-
-class UpdateStatus(BaseModel):
-    paper_id: int
-    new_status: str
-
-class PaperIDResponse(BaseModel):
-    paper_id: int
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -131,16 +87,17 @@ def parse_tei(xml_data):
 
 @app.post("/extract/")
 async def extract_fulltext(file: UploadFile = File(...)):
-    # 1. Save uploaded file
+
+    # Save uploaded file
     tmp_path = os.path.join(UPLOAD_DIR, file.filename)
     file_bytes = await file.read()
     with open(tmp_path, "wb") as out:
         out.write(file_bytes)
 
-    # 2. Compute hash
+    # Compute hash
     pdf_hash = hashlib.sha256(file_bytes).hexdigest()
 
-    # 3. Send to Grobid
+    # Send to Grobid
     try:
         resp = requests.post(
             GROBID_URL,
@@ -153,19 +110,19 @@ async def extract_fulltext(file: UploadFile = File(...)):
     if not resp.ok:
         raise HTTPException(status_code=502, detail="Grobid error: " + resp.text[:200])
 
-    # 4. Parse TEI‑XML
+    # Parse TEI‑XML
     data = parse_tei(resp.content)
 
-    # 5. If keywords are missing, extract from abstract
+    # If keywords are missing, extract from abstract
     if not data.get("keywords") and data.get("abstract"):
         try:
             extracted = extract_keyword(data["abstract"])
             if extracted:
                 data["keywords"] = extracted
         except Exception as e:
-            print("⚠️ Keyword extraction failed:", e)
+            print("Keyword extraction failed:", e)
 
-    # 6. Return full response
+    # Return full response
     return JSONResponse(content={
         **data,
         "pdf_hash": pdf_hash,
@@ -183,13 +140,13 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
         if not payload.title:
             raise HTTPException(status_code=400, detail="Title is required")
             
-        # 1. Check if the paper already exists
+        # Check if the paper already exists
         if payload.pdf_hash:
             existing_paper = db.query(Paper).filter(Paper.pdf_hash == payload.pdf_hash).first()
             if existing_paper:
                 raise HTTPException(status_code=409, detail="This paper already exists in the system.")
         
-        # 2. Add paper
+        # Add paper
         pdf_path = os.path.join(UPLOAD_DIR, payload.pdf_filename) if payload.pdf_filename else ""
         paper = Paper(
             title=payload.title,
@@ -204,7 +161,7 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(paper)
         
-        # 3. Add authors and PaperAuthors
+        # Add authors and PaperAuthors
         try:
             for author_data in payload.authors:
                 if not author_data.name or not author_data.name.strip():
@@ -219,9 +176,8 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
                 db.add(PaperAuthors(paper_id=paper.paper_id, author_id=author.author_id))
         except Exception as author_error:
             print(f"Error with authors: {str(author_error)}")
-            # Continue with the process even if there's an author error
         
-        # 4. Add tags and PaperTags
+        # Add tags and PaperTags
         try:
             for kw in payload.keywords:
                 if not kw or not kw.strip():
@@ -237,24 +193,18 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
                 db.add(PaperTags(paper_id=paper.paper_id, tag_id=tag.tag_id))
         except Exception as tag_error:
             print(f"Error with tags: {str(tag_error)}")
-            # Continue with the process even if there's a tag error
         
         db.commit()
         
-        # Return a consistent response format
         return {"paper_id": paper.paper_id}
     
     except HTTPException as e:
-        # Rollback in case of HTTP exception
         db.rollback()
         print(f"HTTP Exception: {e.detail}")
         raise e
     except Exception as e:
-        # Log the error for debugging
         print(f"Error adding paper: {str(e)}")
-        # Rollback in case of error
         db.rollback()
-        # Return a proper JSON error response
         raise HTTPException(status_code=500, detail=f"Error adding paper: {str(e)}")
 
 def to_paper_output(paper: Paper) -> PaperOutput:
@@ -265,7 +215,6 @@ def to_paper_output(paper: Paper) -> PaperOutput:
         abstract=paper.abstract,
         status=paper.current_status,
         keywords=[tag.name for tag in paper.tags],
-        #collections=[],
         isFavourite=paper.isFavourite,
         addedDate=paper.added_on,
         publication_date=paper.publication_date
@@ -294,7 +243,7 @@ async def update_favourite_status(
         return {"message": "Favourite status updated successfully"}
     
     except Exception as e:
-        print("❌ Exception occurred:", e)
+        print("Exception occurred:", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
