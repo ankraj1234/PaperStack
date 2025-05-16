@@ -15,6 +15,8 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import '@react-pdf-viewer/highlight/lib/styles/index.css';
 
+import ChatBot from '../ChatBot/ChatBot';
+
 interface PDFViewerProps {
   pdfPath?: string;
 }
@@ -237,6 +239,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
   });
   const { activateTab } = defaultLayoutPluginInstance;
 
+  
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
+
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen);
+  };
+
   return (
     <div style={{ height: '100vh' }}>
       <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
@@ -254,6 +263,32 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
           />
         </div>
       </Worker>
+
+      <button
+        onClick={toggleChat}
+        aria-label="Open Chat Bot"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '40px',
+          width: '50px',
+          height: '50px',
+          borderRadius: '50%',
+          border: 'none',
+          backgroundColor: '#0078D4',
+          color: 'white',
+          fontSize: '24px',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        🤖
+      </button>
+
+      {isChatOpen && <ChatBot onClose={toggleChat} />}
     </div>
   );
 };
