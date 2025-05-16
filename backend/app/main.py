@@ -281,6 +281,9 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
+    
+    if paper.pdf_path and os.path.exists(paper.pdf_path):
+        os.remove(paper.pdf_path)
 
     db.delete(paper)
     db.commit()
