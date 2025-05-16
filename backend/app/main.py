@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput
@@ -18,6 +19,16 @@ GROBID_URL = "http://localhost:8070/api/processFulltextDocument"
 
 app = FastAPI()
 
+UPLOAD_PATH = "C:/Users/ar041/ai-paper-system/uploads"
+
+if not os.path.exists(UPLOAD_PATH):
+    os.makedirs(UPLOAD_PATH)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_PATH), name="uploads")
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"], 
@@ -26,9 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def get_db():
     db = SessionLocal()
@@ -196,7 +204,8 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
         
         db.commit()
         
-        return {"paper_id": paper.paper_id}
+        return {"paper_id": paper.paper_id,
+                "pdf_path" : paper.pdf_path}
     
     except HTTPException as e:
         db.rollback()
@@ -217,8 +226,8 @@ def to_paper_output(paper: Paper) -> PaperOutput:
         keywords=[tag.name for tag in paper.tags],
         isFavourite=paper.isFavourite,
         addedDate=paper.added_on,
-        publication_date=paper.publication_date
-
+        publication_date=paper.publication_date,
+        pdf_path=paper.pdf_path
     )
 
 @app.get("/papers", response_model=List[PaperOutput])

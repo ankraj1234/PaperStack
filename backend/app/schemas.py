@@ -18,7 +18,7 @@ class AuthorOutput(BaseModel):
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PaperOutput(BaseModel):
     paper_id : int
@@ -30,9 +30,10 @@ class PaperOutput(BaseModel):
     isFavourite : bool
     addedDate : datetime
     publication_date: Optional[date]
+    pdf_path: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UpdateFavouriteStatus(BaseModel):
@@ -45,3 +46,4 @@ class UpdateStatus(BaseModel):
 
 class PaperIDResponse(BaseModel):
     paper_id: int
+    pdf_path: str

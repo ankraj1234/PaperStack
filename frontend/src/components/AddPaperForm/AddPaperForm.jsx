@@ -94,7 +94,7 @@ function AddPaperForm({ onAddPaper, onCancel }) {
         title: newPaper.title,
         abstract: newPaper.abstract,
         publication_date: newPaper.publication_date,
-        pdf_filename: newPaper.pdf_filename,
+        pdf_path: response.data.pdf_path,
         pdf_hash: newPaper.pdf_hash,
         authors: newPaper.authors,
         keywords: newPaper.keywords,
