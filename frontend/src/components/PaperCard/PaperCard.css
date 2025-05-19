@@ -47,17 +47,23 @@
   cursor: pointer;
   padding: 4px;
   font-size: 25px;
+  transition: transform 0.3s ease;
+}
+
+.favorite-button:hover {
+  transform: scale(1.2);
 }
 
 .delete-button svg {
   width: 20px;
   height: 20px;
   fill: #888;
-  transition: fill 0.2s ease;
+  transition: fill 0.3s ease, transform 0.3s ease;
 }
 
 .delete-button:hover svg {
-  fill: #d00;
+  fill: rgb(39, 8, 8);
+  transform: scale(1.2);
 }
 
 .favorite-button.favourite-active {
@@ -74,6 +80,10 @@
   flex-wrap: wrap;
   color: #222;
   line-height: 1.4;
+}
+
+.paper-card-title:hover {
+  transform: scale(1.01);
 }
 
 .paper-card-pubdate {

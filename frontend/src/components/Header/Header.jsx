@@ -9,9 +9,6 @@ function Header({ onAddPaperClick, sortOrder, searchQuery, setSearchQuery }) {
   return (
     <header className="header">
       <div className="header-left">
-        <button className="menu-button">
-          <i className="menu-icon">≡</i>
-        </button>
         <div className="logo">
           <i className="logo-icon">📄</i>
           <span className="logo-text">PaperOrganizer</span>
