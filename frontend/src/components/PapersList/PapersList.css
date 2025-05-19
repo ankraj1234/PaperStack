@@ -96,8 +96,3 @@
 .papers-list.compact-view .paper-card-abstract {
   display: none;
 }
-
-
-.scrollable-container {
-border: 15px dashed red;
-}

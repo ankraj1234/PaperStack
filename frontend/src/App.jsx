@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import { useNavigate } from 'react-router-dom';
 
@@ -41,7 +42,9 @@ function HomePage(props) {
     setActiveTabId,
     openPdfTab,
     closeTab,
-    activeTab
+    activeTab,
+    collections,
+    fetchCollections,
   } = props;
   return (
     <>
@@ -58,13 +61,13 @@ function HomePage(props) {
           style={{ width: 250, flexShrink: 0 }}
           onStatusSelect={props.handleStatusSelect}
           onCollectionSelect={props.handleCollectionSelect}
-          onTagSelect={props.handleTagSelect}
           selectedStatus={props.selectedStatus}
           selectedCollection={props.selectedCollection}
-          selectedTag={props.selectedTag}
           favorites={props.favoritePapers}
           onFavoritesClick={props.toggleShowFavorites}
           showFavoritesOnly={props.showFavoritesOnly}
+          collections={props.collections}
+          fetchCollections={fetchCollections}
         />
 
         <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
@@ -127,6 +130,26 @@ function App() {
   ]);
   const [activeTabId, setActiveTabId] = useState('papersList');
   const activeTab = tabs.find(tab => tab.id === activeTabId);
+  const [collections, setAvailableCollections] = useState([]);
+
+  const fetchCollections = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/get-collections/');
+        const data = await response.json();
+        setAvailableCollections(
+          data.map(collection => ({
+            label: collection.name,
+            value: collection.name,
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to fetch collections:', error);
+      }
+    };
+  
+  useEffect(() => {
+    fetchCollections();
+  }, []);
 
   const fetchPapers = async () => {
     try {
@@ -361,6 +384,8 @@ function App() {
                 openPdfTab={openPdfTab}
                 closeTab={closeTab}
                 activeTab={activeTab}
+                collections={collections}
+                fetchCollections={fetchCollections}
               />
             }
           />

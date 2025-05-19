@@ -4,13 +4,13 @@ import './Sidebar.css';
 function Sidebar({
   onStatusSelect = () => {},
   onCollectionSelect = () => {},
-  onTagSelect = () => {},
   selectedStatus = "All Papers",
   selectedCollection = null,
-  selectedTag = null,
   favorites = [],
   onFavoritesClick = () => {},
-  showFavoritesOnly = false
+  showFavoritesOnly = false,
+  collections = [],
+  fetchCollections = () => {},
 }) {
   const statuses = [
     { id: "all", name: "All Papers", icon: "📄" },
@@ -18,8 +18,7 @@ function Sidebar({
     { id: "inProgress", name: "In Progress", icon: "📖" },
     { id: "completed", name: "Completed", icon: "✅" }
   ];
-  
-  
+
   return (
     <div className="sidebar">
       <div className="sidebar-section">
@@ -49,6 +48,28 @@ function Sidebar({
             <span className="sidebar-item-name">Favorites</span>
             <span className="sidebar-item-count">{Array.isArray(favorites) ? favorites.length : 0}</span>
           </li>
+        </ul>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-header">
+          <h2 className="sidebar-section-title">COLLECTIONS</h2>
+          <button onClick={fetchCollections} className="refresh-button">⟳</button>
+        </div>
+        <ul className="sidebar-list">
+          {collections.length === 0 && (
+            <li className="sidebar-list-item no-collections">No Collections Found</li>
+          )}
+          {collections.map(collection => (
+            <li
+              key={collection.value} // Use 'value' as key
+              className={`sidebar-list-item ${selectedCollection === collection.value ? 'active' : ''}`}
+              onClick={() => onCollectionSelect(collection.value)} // Use 'value' here
+            >
+              <span className="sidebar-item-icon">📚</span>
+              <span className="sidebar-item-name">{collection.label}</span> 
+            </li>
+          ))}
         </ul>
       </div>
       

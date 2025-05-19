@@ -5,11 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from .database import SessionLocal
-from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput
-from .models import Paper, Author, PaperAuthors, Tags, PaperTags
+from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput
+from .models import Paper, Author, PaperAuthors, Tags, PaperTags, Collection, PaperCollections
 from .utils.keyword_extraction import extract_keyword
 from typing import List
-from pydantic import Field
 import xml.etree.ElementTree as ET
 import os
 import requests
@@ -20,13 +19,13 @@ GROBID_URL = "http://localhost:8070/api/processFulltextDocument"
 app = FastAPI()
 
 UPLOAD_PATH = "C:/Users/ar041/ai-paper-system/uploads"
+UPLOAD_DIR = "uploads"
 
 if not os.path.exists(UPLOAD_PATH):
     os.makedirs(UPLOAD_PATH)
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_PATH), name="uploads")
 
-UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.add_middleware(
@@ -201,6 +200,23 @@ async def add_paper(payload: PaperInput, db: Session = Depends(get_db)):
                 db.add(PaperTags(paper_id=paper.paper_id, tag_id=tag.tag_id))
         except Exception as tag_error:
             print(f"Error with tags: {str(tag_error)}")
+
+        # Add collections and PaperCollections
+        try:
+            for cname in payload.collections:
+                if not cname or not cname.strip():
+                    continue  # Skip empty names
+                    
+                name_clean = cname.strip()
+                collection = db.query(Collection).filter(Collection.name == name_clean).first()
+                if not collection:
+                    collection = Collection(name=name_clean)
+                    db.add(collection)
+                    db.commit()
+                    db.refresh(collection)
+                db.add(PaperCollections(paper_id=paper.paper_id, collection_id=collection.id))
+        except Exception as col_error:
+            print(f"Error with collections: {str(col_error)}")
         
         db.commit()
         
@@ -227,7 +243,8 @@ def to_paper_output(paper: Paper) -> PaperOutput:
         isFavourite=paper.isFavourite,
         addedDate=paper.added_on,
         publication_date=paper.publication_date,
-        pdf_path=paper.pdf_path
+        pdf_path=paper.pdf_path,
+        collections=[collection.name for collection in paper.collections]
     )
 
 @app.get("/papers", response_model=List[PaperOutput])
@@ -288,3 +305,8 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db)):
     db.delete(paper)
     db.commit()
     return {"message": f"Paper {paper_id} deleted successfully"}
+
+@app.get("/get-collections/", response_model=List[CollectionOutput])
+def get_collections(db: Session = Depends(get_db)):
+    collections = db.query(Collection).all()
+    return collections

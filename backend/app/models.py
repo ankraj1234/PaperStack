@@ -23,6 +23,7 @@ class Paper(Base):
 
     authors = relationship("Author", secondary="paper_authors", back_populates="papers")
     tags = relationship("Tags", secondary="paper_tags", back_populates="papers")
+    collections = relationship("Collection", secondary="paper_collections", back_populates="papers")
 
     @property
     def keywords(self):
@@ -57,3 +58,18 @@ class PaperTags(Base):
 
     paper_id = Column(Integer, ForeignKey('papers.paper_id'), primary_key=True)
     tag_id = Column(Integer, ForeignKey('tags.tag_id'), primary_key=True)
+
+class Collection(Base):
+    __tablename__ = "collections"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+
+    papers = relationship("Paper", secondary="paper_collections", back_populates="collections")
+
+
+class PaperCollections(Base):
+    __tablename__ = "paper_collections"
+
+    paper_id = Column(Integer, ForeignKey("papers.paper_id"), primary_key=True)
+    collection_id = Column(Integer, ForeignKey("collections.id"), primary_key=True)

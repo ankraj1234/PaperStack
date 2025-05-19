@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import CreatableSelect from 'react-select/creatable';
 import './AddPaperForm.css';
 import axios from 'axios';
 
@@ -13,10 +14,36 @@ function AddPaperForm({ onAddPaper, onCancel }) {
     pdfUrl: '',
     tags: '',
     collections: '',
+    pdf_hash: '',
   });
 
   const [pdfFile, setPdfFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableCollections, setAvailableCollections] = useState([]);
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/get-collections/');
+        setAvailableCollections(
+          response.data.map(collection => ({
+            label: collection.name,
+            value: collection.name,
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to fetch collections:', error);
+      }
+    };
+    fetchCollections();
+  }, []);
+
+  const handleCollectionsChange = (selectedOptions) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      collections: selectedOptions.map((option) => option.value).join(','),
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,6 +109,7 @@ function AddPaperForm({ onAddPaper, onCancel }) {
       pdf_hash: formData.pdf_hash || '',
       authors: formData.authors.split(',').map((author) => ({ name: author.trim() })).filter((author) => author.name),
       keywords: formData.tags.split(',').map((tag) => tag.trim()).filter((tag) => tag),
+      collections: formData.collections.split(',').map((c) => c.trim()).filter((c) => c),
     };
   
     try {
@@ -100,7 +128,8 @@ function AddPaperForm({ onAddPaper, onCancel }) {
         keywords: newPaper.keywords,
         addedDate: new Date().toISOString(),  
         isFavourite: false,
-        status: "Unread"
+        status: "Unread",
+        collections: newPaper.collections,
       }
 
       onAddPaper(newPaper1); // Notify parent component about the new paper
@@ -218,6 +247,18 @@ function AddPaperForm({ onAddPaper, onCancel }) {
               value={formData.tags}
               onChange={handleChange}
               placeholder="Separate tags with commas"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="collections">Collections</label>
+            <CreatableSelect
+              isMulti
+              options={availableCollections}
+              onChange={handleCollectionsChange}
+              placeholder="Select or create collections"
+              className="react-select-container"
+              classNamePrefix="react-select"
             />
           </div>
 

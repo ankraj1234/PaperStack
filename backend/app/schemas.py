@@ -13,6 +13,7 @@ class PaperInput(BaseModel):
     pdf_hash: str
     authors: List[AuthorInput]
     keywords: List[str]
+    collections: List[str]
 
 class AuthorOutput(BaseModel):
     name: str
@@ -31,6 +32,7 @@ class PaperOutput(BaseModel):
     addedDate : datetime
     publication_date: Optional[date]
     pdf_path: str
+    collections: Optional[List[str]] = []
 
     class Config:
         from_attributes = True
@@ -47,3 +49,6 @@ class UpdateStatus(BaseModel):
 class PaperIDResponse(BaseModel):
     paper_id: int
     pdf_path: str
+
+class CollectionOutput(BaseModel):
+    name: str

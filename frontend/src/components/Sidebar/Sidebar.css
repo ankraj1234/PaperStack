@@ -13,7 +13,7 @@
 }
 
 .sidebar-section-title {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   margin-bottom: 12px;
@@ -53,6 +53,7 @@
 .sidebar-item-name {
   flex-grow: 1;
   font-size: 14px;
+  overflow: hidden;
   color: #111827;
 }
 
@@ -74,4 +75,23 @@
 /* Add some styling to make it clear when favorites are active */
 .sidebar-list-item.active:has(.sidebar-item-name:contains("Favorites")) {
   background-color: #fef3c7;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 0.5rem;
+}
+
+.refresh-button {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.refresh-button:hover {
+  transform: rotate(25deg);
 }
