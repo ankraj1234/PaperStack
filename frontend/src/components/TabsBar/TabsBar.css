@@ -15,14 +15,7 @@
   display: none;
 }
 
-.tabs-container::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 4px;
-}
 
-.tabs-container::-webkit-scrollbar-track {
-  background-color: #f5f5f5;
-}
 
 .tab-item {
   padding: 8px 16px;

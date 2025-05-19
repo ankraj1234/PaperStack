@@ -66,7 +66,7 @@ function HomePage(props) {
           showFavoritesOnly={props.showFavoritesOnly}
         />
 
-        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
           {props.showAddPaperForm && (
             <AddPaperForm
               onAddPaper={props.handleAddPaper}
@@ -74,7 +74,7 @@ function HomePage(props) {
             />
           )}
 
-          <div style={{ width: '100%', overflowX: 'auto'}}>
+          <div style={{ height:'6%' ,width: '100%', overflowX: 'hidden'}}>
             <TabsBar
               tabs={tabs}
               activeTabId={activeTabId}
@@ -83,7 +83,7 @@ function HomePage(props) {
             />
           </div>
 
-          <div style={{ flexGrow: 1, overflowY: 'auto' }}>
+          <div style={{ flexGrow: 1, overflowY: 'hidden' }}>
             {activeTabId === 'papersList' && (
               <PapersList
                 papers={props.displayPapers}
