@@ -1,9 +1,10 @@
 import React from 'react';
 import './Header.css';
 
-function Header({ onAddPaperClick, sortOrder, searchQuery, setSearchQuery }) {
+function Header({ onAddPaperClick, sortOrder, searchQuery, setSearchQuery, setActiveTabId }) {
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setActiveTabId('papersList')
   };
 
   return (

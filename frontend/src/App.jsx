@@ -51,6 +51,7 @@ function HomePage(props) {
         sortOrder={props.sortOrder}
         searchQuery={props.searchQuery}
         setSearchQuery={props.setSearchQuery}
+        setActiveTabId={props.setActiveTabId}
       />
       <div className="app-content">
         <Sidebar
@@ -83,7 +84,7 @@ function HomePage(props) {
             />
           </div>
 
-          <div style={{ flexGrow: 1, overflowY: 'hidden' }}>
+          <div style={{ flexGrow: 1, overflowY: 'hidden'}}>
             {activeTabId === 'papersList' && (
               <PapersList
                 papers={props.displayPapers}
@@ -111,7 +112,6 @@ function HomePage(props) {
 
 
 function App() {
-  // const navigate = useNavigate();
   const [papers, setPapers] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('All Papers');
@@ -197,7 +197,6 @@ function App() {
   const searchPapers = (papers, query) => {
     if (!query) return papers;
     const lowerQuery = query.toLowerCase();
-
     return papers.filter(paper => {
       return (
         (paper.title?.toLowerCase().includes(lowerQuery)) ||
@@ -209,51 +208,6 @@ function App() {
     });
   };
 
-  // function openPdfTab(paper) {
-  //   setTabs(prevTabs => {
-  //     const existing = prevTabs.find(tab => tab.id === paper.paper_id);
-  //     if (existing) {
-  //       setActiveTabId(existing.id);
-  //       return prevTabs;
-  //     }
-  //     console.log(paper.pdf_path);
-
-  //     navigate(`/view-pdf/${paper.paper_id}`, { state: { pdfPath: paper.pdf_path } });
-
-  //     return [...prevTabs, { 
-  //       id: paper.paper_id, 
-  //       title: paper.title, 
-  //       content: 'pdf', 
-  //       pdfPath: paper.pdf_path
-  //     }];
-  //   });
-  //   setActiveTabId(paper.paper_id);
-  // }
-
-  // function openPdfTab(paper) {
-  //   const existing = tabs.find(tab => tab.id === paper.paper_id);
-
-  //   if (existing) {
-  //     setActiveTabId(existing.id);
-  //   } 
-  //   else {
-  //     setTabs(prevTabs => [
-  //       ...prevTabs,
-  //       {
-  //         id: paper.paper_id,
-  //         title: paper.title,
-  //         content: 'pdf',
-  //         pdfPath: paper.pdf_path
-  //       }
-  //     ]);
-  //     setActiveTabId(paper.paper_id);
-  //   }
-
-  //   // This must be outside setTabs callback
-  //   // navigate(`/view-pdf/${paper.paper_id}`, {
-  //   //   state: { pdfPath: paper.pdf_path }
-  //   // });
-  // }
 
   function openPdfTab(paper) {
     setTabs(prevTabs => {
@@ -323,6 +277,7 @@ function App() {
     setSelectedCollection(null);
     setSelectedTag(null);
     setShowFavoritesOnly(false);
+    setActiveTabId('papersList');
   };
 
   const handleCollectionSelect = (collection) => {
@@ -330,6 +285,7 @@ function App() {
     setSelectedStatus(null);
     setSelectedTag(null);
     setShowFavoritesOnly(false);
+    setActiveTabId('papersList');
   };
 
   const handleTagSelect = (tag) => {
@@ -337,6 +293,7 @@ function App() {
     setSelectedStatus(null);
     setSelectedCollection(null);
     setShowFavoritesOnly(false);
+    setActiveTabId('papersList');
   };
 
   const handleSortChange = (sort) => setSortOrder(sort);
@@ -358,6 +315,7 @@ function App() {
     } else {
       setSelectedStatus('All Papers');
     }
+    setActiveTabId('papersList');
   };
 
   const favoritePapers = papers.filter(p => p.isFavourite);
