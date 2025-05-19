@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 import PapersList from './components/PapersList/PapersList';
 import AddPaperForm from './components/AddPaperForm/AddPaperForm';
 import PDFViewer from './components/PDFViewer/PDFViewer';
+import TabsBar from './components/TabsBar/TabsBar';
 
 import './App.css';
 
@@ -51,8 +52,9 @@ function HomePage(props) {
         searchQuery={props.searchQuery}
         setSearchQuery={props.setSearchQuery}
       />
-      <div className="app-content" style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
+      <div className="app-content">
         <Sidebar
+          style={{ width: 250, flexShrink: 0 }}
           onStatusSelect={props.handleStatusSelect}
           onCollectionSelect={props.handleCollectionSelect}
           onTagSelect={props.handleTagSelect}
@@ -64,7 +66,7 @@ function HomePage(props) {
           showFavoritesOnly={props.showFavoritesOnly}
         />
 
-        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {props.showAddPaperForm && (
             <AddPaperForm
               onAddPaper={props.handleAddPaper}
@@ -72,49 +74,16 @@ function HomePage(props) {
             />
           )}
 
-          <div style={{ display: 'flex', borderBottom: '1px solid #ccc' }}>
-            {tabs.map(tab => (
-              <div
-                key={tab.id}
-                onClick={() => setActiveTabId(tab.id)}
-                style={{
-                  padding: '8px 16px',
-                  cursor: 'pointer',
-                  backgroundColor: tab.id === activeTabId ? '#e0e0e0' : '#f9f9f9',
-                  borderTop: '2px solid',
-                  borderTopColor: tab.id === activeTabId ? '#0078d4' : 'transparent',
-                  position: 'relative',
-                  marginRight: '4px',
-                  userSelect: 'none',
-                }}
-              >
-                {tab.title}
-                {tab.id !== 'papersList' && (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      closeTab(tab.id);
-                    }}
-                    style={{
-                      marginLeft: '8px',
-                      cursor: 'pointer',
-                      background: 'none',
-                      border: 'none',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      lineHeight: 1,
-                    }}
-                    aria-label="Close tab"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
+          <div style={{ width: '100%', overflowX: 'auto'}}>
+            <TabsBar
+              tabs={tabs}
+              activeTabId={activeTabId}
+              setActiveTabId={setActiveTabId}
+              closeTab={closeTab}
+            />
           </div>
 
-          {/* TAB CONTENT AREA */}
-          <div style={{ flexGrow: 1, overflow: 'auto' }}>
+          <div style={{ flexGrow: 1, overflowY: 'auto' }}>
             {activeTabId === 'papersList' && (
               <PapersList
                 papers={props.displayPapers}
@@ -128,19 +97,14 @@ function HomePage(props) {
                 onPaperClick={props.openPdfTab}
               />
             )}
-            {/* {activeTabId !== 'papersList' && (
-              <PDFViewer
-                pdfPath={tabs.find(tab => tab.id === activeTabId)?.pdfPath}
-              />
-            )} */}
 
             {activeTab && activeTab.content === 'pdf' && (
               <PDFViewer pdfPath={activeTab.pdfPath} />
             )}
-
           </div>
         </div>
       </div>
+
     </>
   );
 }
