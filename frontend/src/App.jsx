@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
@@ -10,6 +11,37 @@ import PDFViewer from './components/PDFViewer/PDFViewer';
 import './App.css';
 
 function HomePage(props) {
+  const {
+    toggleAddPaperForm,
+    handleSortChange,
+    sortOrder,
+    searchQuery,
+    setSearchQuery,
+    handleStatusSelect,
+    handleCollectionSelect,
+    handleTagSelect,
+    selectedStatus,
+    selectedCollection,
+    selectedTag,
+    favoritePapers,
+    toggleShowFavorites,
+    showFavoritesOnly,
+    showAddPaperForm,
+    handleAddPaper,
+    setShowAddPaperForm,
+    displayPapers,
+    viewMode,
+    handleViewModeChange,
+    toggleFavorite,
+    updatePaperStatus,
+    deletePaper,
+    tabs,
+    activeTabId,
+    setActiveTabId,
+    openPdfTab,
+    closeTab,
+    activeTab
+  } = props;
   return (
     <>
       <Header
@@ -19,7 +51,7 @@ function HomePage(props) {
         searchQuery={props.searchQuery}
         setSearchQuery={props.setSearchQuery}
       />
-      <div className="app-content">
+      <div className="app-content" style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
         <Sidebar
           onStatusSelect={props.handleStatusSelect}
           onCollectionSelect={props.handleCollectionSelect}
@@ -32,29 +64,90 @@ function HomePage(props) {
           showFavoritesOnly={props.showFavoritesOnly}
         />
 
-        {props.showAddPaperForm && (
-          <AddPaperForm
-            onAddPaper={props.handleAddPaper}
-            onCancel={() => props.setShowAddPaperForm(false)}
-          />
-        )}
+        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {props.showAddPaperForm && (
+            <AddPaperForm
+              onAddPaper={props.handleAddPaper}
+              onCancel={() => props.setShowAddPaperForm(false)}
+            />
+          )}
 
-        <PapersList
-          papers={props.displayPapers}
-          viewMode={props.viewMode}
-          onViewModeChange={props.handleViewModeChange}
-          sortOrder={props.sortOrder}
-          onSortChange={props.handleSortChange}
-          toggleFavorite={props.toggleFavorite}
-          updatePaperStatus={props.updatePaperStatus}
-          deletePaper={props.deletePaper}
-        />
+          <div style={{ display: 'flex', borderBottom: '1px solid #ccc' }}>
+            {tabs.map(tab => (
+              <div
+                key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                style={{
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  backgroundColor: tab.id === activeTabId ? '#e0e0e0' : '#f9f9f9',
+                  borderTop: '2px solid',
+                  borderTopColor: tab.id === activeTabId ? '#0078d4' : 'transparent',
+                  position: 'relative',
+                  marginRight: '4px',
+                  userSelect: 'none',
+                }}
+              >
+                {tab.title}
+                {tab.id !== 'papersList' && (
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    style={{
+                      marginLeft: '8px',
+                      cursor: 'pointer',
+                      background: 'none',
+                      border: 'none',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      lineHeight: 1,
+                    }}
+                    aria-label="Close tab"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* TAB CONTENT AREA */}
+          <div style={{ flexGrow: 1, overflow: 'auto' }}>
+            {activeTabId === 'papersList' && (
+              <PapersList
+                papers={props.displayPapers}
+                viewMode={props.viewMode}
+                onViewModeChange={props.handleViewModeChange}
+                sortOrder={props.sortOrder}
+                onSortChange={props.handleSortChange}
+                toggleFavorite={props.toggleFavorite}
+                updatePaperStatus={props.updatePaperStatus}
+                deletePaper={props.deletePaper}
+                onPaperClick={props.openPdfTab}
+              />
+            )}
+            {/* {activeTabId !== 'papersList' && (
+              <PDFViewer
+                pdfPath={tabs.find(tab => tab.id === activeTabId)?.pdfPath}
+              />
+            )} */}
+
+            {activeTab && activeTab.content === 'pdf' && (
+              <PDFViewer pdfPath={activeTab.pdfPath} />
+            )}
+
+          </div>
+        </div>
       </div>
     </>
   );
 }
 
+
 function App() {
+  // const navigate = useNavigate();
   const [papers, setPapers] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('All Papers');
@@ -65,6 +158,11 @@ function App() {
   const [showAddPaperForm, setShowAddPaperForm] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [tabs, setTabs] = useState([
+    { id: 'papersList', title: 'Papers List', content: 'list' }
+  ]);
+  const [activeTabId, setActiveTabId] = useState('papersList');
+  const activeTab = tabs.find(tab => tab.id === activeTabId);
 
   const fetchPapers = async () => {
     try {
@@ -147,6 +245,87 @@ function App() {
     });
   };
 
+  // function openPdfTab(paper) {
+  //   setTabs(prevTabs => {
+  //     const existing = prevTabs.find(tab => tab.id === paper.paper_id);
+  //     if (existing) {
+  //       setActiveTabId(existing.id);
+  //       return prevTabs;
+  //     }
+  //     console.log(paper.pdf_path);
+
+  //     navigate(`/view-pdf/${paper.paper_id}`, { state: { pdfPath: paper.pdf_path } });
+
+  //     return [...prevTabs, { 
+  //       id: paper.paper_id, 
+  //       title: paper.title, 
+  //       content: 'pdf', 
+  //       pdfPath: paper.pdf_path
+  //     }];
+  //   });
+  //   setActiveTabId(paper.paper_id);
+  // }
+
+  // function openPdfTab(paper) {
+  //   const existing = tabs.find(tab => tab.id === paper.paper_id);
+
+  //   if (existing) {
+  //     setActiveTabId(existing.id);
+  //   } 
+  //   else {
+  //     setTabs(prevTabs => [
+  //       ...prevTabs,
+  //       {
+  //         id: paper.paper_id,
+  //         title: paper.title,
+  //         content: 'pdf',
+  //         pdfPath: paper.pdf_path
+  //       }
+  //     ]);
+  //     setActiveTabId(paper.paper_id);
+  //   }
+
+  //   // This must be outside setTabs callback
+  //   // navigate(`/view-pdf/${paper.paper_id}`, {
+  //   //   state: { pdfPath: paper.pdf_path }
+  //   // });
+  // }
+
+  function openPdfTab(paper) {
+    setTabs(prevTabs => {
+      const existing = prevTabs.find(tab => tab.id === paper.paper_id);
+      if (existing) {
+        setActiveTabId(existing.id);
+        return prevTabs;
+      }
+
+      return [
+        ...prevTabs,
+        {
+          id: paper.paper_id,
+          title: paper.title,
+          content: 'pdf',
+          pdfPath: paper.pdf_path,
+        },
+      ];
+    });
+
+    setActiveTabId(paper.paper_id);
+  }
+
+
+  // Close tab function
+  function closeTab(id) {
+    setTabs(prevTabs => {
+      const filtered = prevTabs.filter(tab => tab.id !== id);
+      // If closing active tab, activate last tab or Papers List
+      if (activeTabId === id) {
+        setActiveTabId(filtered.length ? filtered[filtered.length - 1].id : 'papersList');
+      }
+      return filtered;
+    });
+  }
+
   const filteredPapers = papers.filter(paper => {
     if (selectedStatus && selectedStatus !== 'All Papers' && paper.status !== selectedStatus) {
       return false;
@@ -225,7 +404,6 @@ function App() {
   const displayPapers = showFavoritesOnly ? searchedFavoritePapers : sortedPapers;
 
   return (
-    <Router>
       <div className="app">
         <Routes>
           <Route
@@ -255,13 +433,17 @@ function App() {
                 toggleFavorite={toggleFavorite}
                 updatePaperStatus={updatePaperStatus}
                 deletePaper={deletePaper}
+                tabs={tabs}
+                activeTabId={activeTabId}
+                setActiveTabId={setActiveTabId}
+                openPdfTab={openPdfTab}
+                closeTab={closeTab}
+                activeTab={activeTab}
               />
             }
           />
-          <Route path="/view-pdf/:id" element={<PDFViewer />} />
         </Routes>
       </div>
-    </Router>
   );
 }
 

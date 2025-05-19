@@ -4,12 +4,19 @@ import './PaperCard.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deletePaper }) {
+function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deletePaper, onTitleClick }) {
   
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const handleOpenPDF = () => {
-    navigate(`/view-pdf/${paper.paper_id}`, { state: { pdfPath: paper.pdf_path } });
+  // const handleOpenPDF = () => {
+  //   navigate(`/view-pdf/${paper.paper_id}`, { state: { pdfPath: paper.pdf_path } });
+  // };
+
+  const handleTitleClick = (e) => {
+    e.stopPropagation(); // Prevent triggering card-level clicks if any
+    if (onTitleClick) {
+      onTitleClick(paper);
+    }
   };
 
   const getStatusIcon = (paperStatus) => {
@@ -105,7 +112,7 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
 
       <h3 
         className="paper-card-title"
-        onClick={handleOpenPDF}
+        onClick={handleTitleClick}
         style={{ cursor: 'pointer'}}
       >
         {paper.title}

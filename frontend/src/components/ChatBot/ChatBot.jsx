@@ -17,9 +17,8 @@ const ChatBot = ({ onClose }) => {
 
         const rect = containerRef.current.getBoundingClientRect();
 
-        const newWidth = rect.right - e.clientX; // Resizing from the left
-        const newHeight = e.clientY - rect.top;  // Resizing from the bottom
-
+        const newWidth = rect.right - e.clientX; 
+        const newHeight = e.clientY - rect.top; 
         const maxWidth = 600;
         const minWidth = 250;
         const maxHeight = 700;

@@ -5,6 +5,7 @@ import './PapersList.css';
 function PapersList({
   papers = [],
   viewMode = 'list',
+  onPaperClick = () => {},  
   onViewModeChange = () => {},
   sortOrder = 'Date Added',
   onSortChange = () => {},
@@ -61,18 +62,17 @@ function PapersList({
         {validPapers.length === 0 ? (
           <div className="no-papers">No papers found</div>
         ) : (
-          validPapers.map(paper => {
-            return (
-              <PaperCard 
-                key={paper.paper_id} 
-                paper={paper} 
-                viewMode={viewMode} 
-                toggleFavorite={toggleFavorite} 
-                updatePaperStatus={updatePaperStatus}
-                deletePaper={deletePaper} 
-              />
-            );
-          })
+          validPapers.map(paper => (
+            <PaperCard 
+              key={paper.paper_id} 
+              paper={paper} 
+              viewMode={viewMode} 
+              toggleFavorite={toggleFavorite} 
+              updatePaperStatus={updatePaperStatus}
+              deletePaper={deletePaper}
+              onTitleClick={onPaperClick}
+            />
+          ))
         )}
       </div>
     </div>

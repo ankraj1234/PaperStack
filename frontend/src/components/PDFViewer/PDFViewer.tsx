@@ -37,11 +37,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
   
   let noteId = notes.length;
 
-  const location = useLocation();
-  const state = location.state as PDFViewerProps;
+  // const location = useLocation();
+  // const state = location.state as PDFViewerProps;
 
-  const passedPath = state?.pdfPath || '';
-  const fullUrl = `http://127.0.0.1:8000/${passedPath.replace(/\\/g, '/')}`;
+  // const passedPath = state?.pdfPath || '';
+  const fullUrl = `http://127.0.0.1:8000/${pdfPath.replace(/\\/g, '/')}`;
 
   const handleDocumentLoad = (e: DocumentLoadEvent) => {
     setCurrentDoc(e.doc);
