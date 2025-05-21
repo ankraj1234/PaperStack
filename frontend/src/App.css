@@ -19,3 +19,12 @@ body {
   flex: 1;
   overflow: hidden;
 }
+
+.hide-scrollbar {
+  scrollbar-width: none;          
+  -ms-overflow-style: none;       
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;       
+}

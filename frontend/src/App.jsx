@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import { useNavigate } from 'react-router-dom';
 
@@ -14,37 +13,11 @@ import './App.css';
 
 function HomePage(props) {
   const {
-    toggleAddPaperForm,
-    handleSortChange,
-    sortOrder,
-    searchQuery,
-    setSearchQuery,
-    handleStatusSelect,
-    handleCollectionSelect,
-    handleTagSelect,
-    selectedStatus,
-    selectedCollection,
-    selectedTag,
-    favoritePapers,
-    toggleShowFavorites,
-    showFavoritesOnly,
-    showAddPaperForm,
-    handleAddPaper,
-    setShowAddPaperForm,
-    displayPapers,
-    viewMode,
-    handleViewModeChange,
-    toggleFavorite,
-    updatePaperStatus,
-    deletePaper,
     tabs,
     activeTabId,
     setActiveTabId,
-    openPdfTab,
     closeTab,
     activeTab,
-    collections,
-    fetchCollections,
   } = props;
   return (
     <>
@@ -67,7 +40,7 @@ function HomePage(props) {
           onFavoritesClick={props.toggleShowFavorites}
           showFavoritesOnly={props.showFavoritesOnly}
           collections={props.collections}
-          fetchCollections={fetchCollections}
+          fetchCollections={props.fetchCollections}
         />
 
         <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
@@ -87,10 +60,10 @@ function HomePage(props) {
             />
           </div>
 
-          <div style={{ flexGrow: 1, overflowY: 'hidden'}}>
+          <div style={{ flexGrow: 1, overflowY: 'auto'}} className="hide-scrollbar">
             {activeTabId === 'papersList' && (
               <PapersList
-                papers={props.displayPapers}
+                papers_list={props.displayPapers}
                 viewMode={props.viewMode}
                 onViewModeChange={props.handleViewModeChange}
                 sortOrder={props.sortOrder}
@@ -99,6 +72,7 @@ function HomePage(props) {
                 updatePaperStatus={props.updatePaperStatus}
                 deletePaper={props.deletePaper}
                 onPaperClick={props.openPdfTab}
+                fetchPaper={props.fetchPaper}
               />
             )}
 
@@ -133,20 +107,36 @@ function App() {
   const [collections, setAvailableCollections] = useState([]);
 
   const fetchCollections = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/get-collections/');
-        const data = await response.json();
-        setAvailableCollections(
-          data.map(collection => ({
-            label: collection.name,
-            value: collection.name,
-          }))
-        );
-      } catch (error) {
-        console.error('Failed to fetch collections:', error);
-      }
-    };
-  
+    try {
+      const response = await fetch('http://127.0.0.1:8000/get-collections/');
+      const data = await response.json();
+      setAvailableCollections(
+        data.map(collection => ({
+          label: collection.name,
+          value: collection.name,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch collections:', error);
+    }
+  };
+
+  const fetchPaper = async (paperId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/paper_/${paperId}`);
+      const data = await response.json();
+      const newCollections = data.collections;
+      
+      setPapers(prev =>
+        prev.map(p =>
+          p.paper_id === paperId ? {...p, collections: newCollections } : p
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching papers:', error);
+    }
+  };
+    
   useEffect(() => {
     fetchCollections();
   }, []);
@@ -355,6 +345,8 @@ function App() {
             path="/"
             element={
               <HomePage
+                papers={papers}
+                setPapers={setPapers}
                 toggleAddPaperForm={toggleAddPaperForm}
                 handleSortChange={handleSortChange}
                 sortOrder={sortOrder}
@@ -386,6 +378,7 @@ function App() {
                 activeTab={activeTab}
                 collections={collections}
                 fetchCollections={fetchCollections}
+                fetchPaper={fetchPaper}
               />
             }
           />

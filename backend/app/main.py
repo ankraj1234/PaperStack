@@ -5,10 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from .database import SessionLocal
-from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput
+from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput, PaperCollectionUpdate
 from .models import Paper, Author, PaperAuthors, Tags, PaperTags, Collection, PaperCollections
 from .utils.keyword_extraction import extract_keyword
-from typing import List
+from typing import List, Dict
 import xml.etree.ElementTree as ET
 import os
 import requests
@@ -252,6 +252,11 @@ def get_papers(db: Session = Depends(get_db)):
     db_papers = db.query(Paper).all()
     return [to_paper_output(paper) for paper in db_papers]
 
+@app.get("/paper_/{paper_id}", response_model=PaperOutput)
+def get_paper(paper_id: int, db: Session = Depends(get_db)):
+    db_papers = db.query(Paper).filter(Paper.paper_id == paper_id).first()
+    return to_paper_output(db_papers)
+
 @app.post("/api/updateFavouriteStatus")
 async def update_favourite_status(
     request: Request,
@@ -310,3 +315,63 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db)):
 def get_collections(db: Session = Depends(get_db)):
     collections = db.query(Collection).all()
     return collections
+
+@app.get("/paper-collections/{paper_id}", response_model=Dict[str, int])
+def get_paper_collections(paper_id: int, db: Session = Depends(get_db)):
+    paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+
+    collections = db.query(Collection).all()
+
+    result = {}
+    paper_collections = {c.id for c in paper.collections} 
+
+    for collection in collections:
+        result[collection.name] = 1 if collection.id in paper_collections else 0
+
+    return result
+
+@app.post("/update-paper-collections/")
+def update_paper_collections(update_data: PaperCollectionUpdate, db: Session = Depends(get_db)):
+    paper = db.query(Paper).filter(Paper.paper_id == update_data.paper_id).first()
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+
+    # Get all collections in DB
+    all_collections = db.query(Collection).all()
+    name_to_collection = {c.name: c for c in all_collections}
+
+    # Current collection IDs the paper belongs to
+    current_collection_ids = {c.id for c in paper.collections}
+
+    for name, should_belong in update_data.collections.items():
+        if name not in name_to_collection:
+            continue
+        collection = name_to_collection[name]
+
+        if should_belong and collection.id not in current_collection_ids:
+            paper.collections.append(collection)
+        elif not should_belong and collection.id in current_collection_ids:
+            paper.collections.remove(collection)
+
+    db.commit()
+    return {"status": "success", "paper_id": update_data.paper_id}
+
+@app.post("/add-collection/", response_model=CollectionOutput)
+def add_collection(collection: CollectionOutput, db: Session = Depends(get_db)):
+    new_collection = Collection(**collection.dict())
+    db.add(new_collection)
+    db.commit()
+    db.refresh(new_collection)
+    return new_collection
+
+
+@app.delete("/delete-collection/{collection_name}/")
+def delete_collection(collection_name: str, db: Session = Depends(get_db)):
+    collection = db.query(Collection).filter(Collection.name == collection_name).first()
+    if not collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    db.delete(collection)
+    db.commit()
+    return {"message": f"Collection '{collection_name}' deleted successfully"}

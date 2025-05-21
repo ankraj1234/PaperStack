@@ -2,10 +2,15 @@
   width: 240px;
   min-width: 240px;
   background-color: #f5f5f5;
-  padding: 20px;
+  padding-left: 20px;
+  padding-right: 10px;
+  padding-top:10px;
   border-right: 1px solid #e0e0e0;
-  height: calc(100vh - 60px);
-  overflow-y: auto;
+  overflow-y: hidden;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-section {
@@ -34,6 +39,7 @@
   margin-bottom: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  overflow: hidden;
 }
 
 .sidebar-list-item:hover {
@@ -53,8 +59,32 @@
 .sidebar-item-name {
   flex-grow: 1;
   font-size: 14px;
-  overflow: hidden;
   color: #111827;
+  white-space: nowrap;  
+  overflow: hidden;        
+  text-overflow: ellipsis;  
+}
+
+.sidebar-item-name:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
+  transform: translateY(-6px);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sidebar-item-name::after {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .sidebar-item-count {
@@ -67,12 +97,10 @@
   text-align: center;
 }
 
-/* Special styling for favorites */
 .sidebar-list-item.active .sidebar-item-icon {
   color: #f59e0b;
 }
 
-/* Add some styling to make it clear when favorites are active */
 .sidebar-list-item.active:has(.sidebar-item-name:contains("Favorites")) {
   background-color: #fef3c7;
 }
@@ -90,8 +118,64 @@
   font-size: 1rem;
   cursor: pointer;
   transition: transform 0.2s ease;
+  margin-top: -6px;
 }
 
 .refresh-button:hover {
   transform: rotate(25deg);
+}
+
+.add-button {
+  background: transparent;
+  border: none;
+  padding: 5px;
+  font-size: 1.3rem; 
+  cursor: pointer;
+  margin-top: -10px;
+}
+.add-button:hover {
+  background-color: #eaf0ea;
+  transform: scale(1.1);
+}
+
+.sidebar-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 10px; 
+  padding: 0 4px;
+  line-height: 1;
+  color: #555;
+}
+
+.delete-button:hover {
+  color: red;
+  content: attr("Delete");
+  transform: scale(1.1);
+}
+
+
+.add-collection-input {
+  width: 100%;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.collection-scrollable {
+  overflow-y: auto;
+  max-height: calc(100vh - 430px); 
+  padding-right: 4px;
+}
+
+.collection-scrollable::-webkit-scrollbar {
+  display: none;
 }

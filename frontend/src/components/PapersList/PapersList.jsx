@@ -3,7 +3,7 @@ import PaperCard from '../PaperCard/PaperCard';
 import './PapersList.css';
 
 function PapersList({
-  papers = [],
+  papers_list = [],
   viewMode = 'list',
   onPaperClick = () => {},  
   onViewModeChange = () => {},
@@ -12,9 +12,9 @@ function PapersList({
   toggleFavorite = () => {},
   updatePaperStatus = () => {},
   deletePaper,
-  collections,
+  fetchPaper,
 }) {
-  const validPapers = Array.isArray(papers) ? papers : [];
+  const validPapers = Array.isArray(papers_list) ? papers_list : [];
 
   return (
     <div className="papers-container">
@@ -72,7 +72,7 @@ function PapersList({
               updatePaperStatus={updatePaperStatus}
               deletePaper={deletePaper}
               onTitleClick={onPaperClick}
-              collections={collections}
+              fetchPaper={fetchPaper}
             />
           ))
         )}

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import date, datetime
 
 class AuthorInput(BaseModel):
@@ -52,3 +52,7 @@ class PaperIDResponse(BaseModel):
 
 class CollectionOutput(BaseModel):
     name: str
+
+class PaperCollectionUpdate(BaseModel):
+    paper_id: int
+    collections: Dict[str, int]
