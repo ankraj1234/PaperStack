@@ -132,7 +132,7 @@ function Sidebar({
                 className={`sidebar-list-item ${selectedCollection === collection.value ? 'active' : ''}`}
                 onClick={() => onCollectionSelect(collection.value)}
               >
-                <span className="sidebar-item-icon">📚</span>
+                
                 <span className="sidebar-item-name">{collection.label}</span>
                 <button className="delete-button" onClick={() => deleteCollection(collection.value)}>🗑</button>
               </li>

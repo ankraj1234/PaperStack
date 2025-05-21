@@ -8,6 +8,19 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
   const [selectedCollections, setSelectedCollections] = useState({});
   const [isLoadingCollections, setIsLoadingCollections] = useState(false);
 
+  const getStatusIcon = (paperStatus) => {
+    switch (paperStatus) {
+      case 'Unread':
+        return '⏳';
+      case 'In Progress':
+        return '📖';
+      case 'Completed':
+        return '✅';
+      default:
+        return '📄';
+    }
+  };
+  
   // Fetch paper's collections when dropdown is opened
   useEffect(() => {
     if (showCollections) {
@@ -35,23 +48,49 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
     }
   };
 
+  const toggleCollectionDropdown = (e) => {
+    e.stopPropagation();
+    setShowCollections(!showCollections);
+  };
+
+  const handleCollectionChange = (collectionName) => {
+    setSelectedCollections(prev => ({
+      ...prev,
+      [collectionName]: prev[collectionName] === 1 ? 0 : 1 
+    }));
+  };
+
+    const saveCollections = async () => {
+    try {
+      const payload = {
+        paper_id: paper.paper_id,
+        collections: selectedCollections
+      };
+      
+      const response = await axios.post(
+        'http://127.0.0.1:8000/update-paper-collections/',
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        setShowCollections(false);
+        console.log("Paper_ID:", paper.paper_id);
+        fetchPaper(paper.paper_id);
+      }
+    } catch (error) {
+      console.error('Error updating collections!', error);
+    }
+  };
+
   const handleTitleClick = (e) => {
     e.stopPropagation(); 
     if (onTitleClick) {
       onTitleClick(paper);
-    }
-  };
-
-  const getStatusIcon = (paperStatus) => {
-    switch (paperStatus) {
-      case 'Unread':
-        return '⏳';
-      case 'In Progress':
-        return '📖';
-      case 'Completed':
-        return '✅';
-      default:
-        return '📄';
     }
   };
 
@@ -100,45 +139,6 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
 
   const getButtonClass = (btnStatus) =>
     `status-button ${btnStatus.toLowerCase()} ${paper.status === btnStatus ? 'active' : ''}`;
-
-  const toggleCollectionDropdown = (e) => {
-    e.stopPropagation();
-    setShowCollections(!showCollections);
-  };
-
-  const handleCollectionChange = (collectionName) => {
-    setSelectedCollections(prev => ({
-      ...prev,
-      [collectionName]: prev[collectionName] === 1 ? 0 : 1 
-    }));
-  };
-
-    const saveCollections = async () => {
-    try {
-      const payload = {
-        paper_id: paper.paper_id,
-        collections: selectedCollections
-      };
-      
-      const response = await axios.post(
-        'http://127.0.0.1:8000/update-paper-collections/',
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        setShowCollections(false);
-        console.log("Paper_ID:", paper.paper_id);
-        fetchPaper(paper.paper_id);
-      }
-    } catch (error) {
-      console.error('Error updating collections!', error);
-    }
-  };
 
   return (
     <div className={`paper-card ${viewMode}-view`}>

@@ -3,16 +3,7 @@ import PaperCard from '../PaperCard/PaperCard';
 import './PapersList.css';
 
 function PapersList({
-  papers_list = [],
-  viewMode = 'list',
-  onPaperClick = () => {},  
-  onViewModeChange = () => {},
-  sortOrder = 'Date Added',
-  onSortChange = () => {},
-  toggleFavorite = () => {},
-  updatePaperStatus = () => {},
-  deletePaper,
-  fetchPaper,
+  papers_list, viewMode, onPaperClick, onViewModeChange, sortOrder = 'Date Added', onSortChange, toggleFavorite, updatePaperStatus , deletePaper, fetchPaper,
 }) {
   const validPapers = Array.isArray(papers_list) ? papers_list : [];
 
