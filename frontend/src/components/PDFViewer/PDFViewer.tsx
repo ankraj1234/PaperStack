@@ -8,6 +8,7 @@ import {
   RenderHighlightContentProps,
   RenderHighlightsProps,
   RenderHighlightTargetProps,
+  Trigger,
 } from '@react-pdf-viewer/highlight';
 import { useLocation } from 'react-router-dom';
 
@@ -28,27 +29,67 @@ interface Note {
   quote: string;
 }
 
+// Map to store notes for each PDF document
+interface NotesMap {
+  [pdfPath: string]: Note[];
+}
+
+const STORAGE_KEY = 'pdf_viewer_notes';
+
 const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
   const [message, setMessage] = React.useState('');
-  const [notes, setNotes] = React.useState<Note[]>([]);
+  // Store notes for each PDF path
+  const [allNotes, setAllNotes] = React.useState<NotesMap>(() => {
+    // Load saved notes from localStorage on component mount
+    try {
+      const savedNotes = localStorage.getItem(STORAGE_KEY);
+      return savedNotes ? JSON.parse(savedNotes) : {};
+    } catch (error) {
+      console.error('Error loading notes from localStorage:', error);
+      return {};
+    }
+  });
+  
+  // Current PDF notes
+  const [currentNotes, setCurrentNotes] = React.useState<Note[]>([]);
   const notesContainerRef = React.useRef<HTMLDivElement | null>(null);
   const noteEles: Map<number, HTMLElement> = new Map();
   const [currentDoc, setCurrentDoc] = React.useState<PdfJs.PdfDocument | null>(null);
   
-  let noteId = notes.length;
+  // Generate a unique ID for new notes
+  const getNextNoteId = React.useCallback(() => {
+    // Find the highest existing ID across all documents and increment by 1
+    let highestId = 0;
+    Object.values(allNotes).forEach(docNotes => {
+      docNotes.forEach(note => {
+        if (note.id > highestId) highestId = note.id;
+      });
+    });
+    return highestId + 1;
+  }, [allNotes]);
 
-  // const location = useLocation();
-  // const state = location.state as PDFViewerProps;
-
-  // const passedPath = state?.pdfPath || '';
   const fullUrl = `http://127.0.0.1:8000/${pdfPath.replace(/\\/g, '/')}`;
+
+  // Save notes to localStorage whenever they change
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allNotes));
+    } catch (error) {
+      console.error('Error saving notes to localStorage:', error);
+    }
+  }, [allNotes]);
+
+  // Load notes for the current PDF document
+  React.useEffect(() => {
+    if (pdfPath) {
+      // Set current notes to those associated with the current PDF path
+      const existingNotes = allNotes[pdfPath] || [];
+      setCurrentNotes(existingNotes);
+    }
+  }, [pdfPath, allNotes]);
 
   const handleDocumentLoad = (e: DocumentLoadEvent) => {
     setCurrentDoc(e.doc);
-    if (currentDoc && currentDoc !== e.doc) {
-      // User opens new document
-      setNotes([]);
-    }
   };
 
   const renderHighlightTarget = (props: RenderHighlightTargetProps) => (
@@ -77,17 +118,41 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
   );
 
   const renderHighlightContent = (props: RenderHighlightContentProps) => {
+    // Use a regular DOM ref instead of React.useRef to avoid eslint warnings
+    let textareaElement: HTMLTextAreaElement | null = null;
+    
+    // We'll focus manually after render instead of using useEffect
+    setTimeout(() => {
+      if (textareaElement) {
+        textareaElement.focus();
+      }
+    }, 100);
+    
     const addNote = () => {
       if (message !== '') {
+        const newNoteId = getNextNoteId();
         const note: Note = {
-          id: ++noteId,
+          id: newNoteId,
           content: message,
           highlightAreas: props.highlightAreas,
           quote: props.selectedText,
         };
-        setNotes(notes.concat([note]));
+        
+        // Update the notes for the current PDF path
+        const updatedNotes = [...currentNotes, note];
+        setCurrentNotes(updatedNotes);
+        
+        // Update the global notes map
+        setAllNotes(prev => ({
+          ...prev,
+          [pdfPath]: updatedNotes
+        }));
+        
         props.cancel();
         setMessage(''); // Clear the message after adding
+        
+        // Automatically switch to the notes tab after adding a note
+        setTimeout(() => activateTab(3), 100);
       }
     };
 
@@ -106,6 +171,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
       >
         <div>
           <textarea
+            ref={(el) => { textareaElement = el; }}
             rows={3}
             style={{
               border: '1px solid rgba(0, 0, 0, .3)',
@@ -113,6 +179,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
             }}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            placeholder="Add your note here..."
           ></textarea>
         </div>
         <div
@@ -140,7 +207,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
 
   const renderHighlights = (props: RenderHighlightsProps) => (
     <div>
-      {notes.map((note) => (
+      {currentNotes.map((note) => (
         <React.Fragment key={note.id}>
           {note.highlightAreas
             .filter((area) => area.pageIndex === props.pageIndex)
@@ -167,6 +234,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
     renderHighlightTarget,
     renderHighlightContent,
     renderHighlights,
+    trigger: 'selection' as Trigger, // Automatically show the highlight panel on text selection
   });
 
   const { jumpToHighlightArea } = highlightPluginInstance;
@@ -177,6 +245,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
     };
   }, []);
 
+  // Add function to delete a note
+  const deleteNote = (noteId: number) => {
+    // Filter out the note with the given ID
+    const updatedNotes = currentNotes.filter(note => note.id !== noteId);
+    
+    // Update current notes
+    setCurrentNotes(updatedNotes);
+    
+    // Update the global notes map
+    setAllNotes(prev => ({
+      ...prev,
+      [pdfPath]: updatedNotes
+    }));
+  };
+
   const sidebarNotes = (
     <div
       ref={notesContainerRef}
@@ -185,36 +268,66 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
         width: '100%',
       }}
     >
-      {notes.length === 0 && <div style={{ textAlign: 'center' }}>There are no notes</div>}
-      {notes.map((note) => {
+      {currentNotes.length === 0 && <div style={{ textAlign: 'center' }}>There are no notes</div>}
+      {currentNotes.map((note) => {
         return (
           <div
             key={note.id}
             style={{
               borderBottom: '1px solid rgba(0, 0, 0, .3)',
-              cursor: 'pointer',
               padding: '8px',
+              position: 'relative',
             }}
-            onClick={() => jumpToHighlightArea(note.highlightAreas[0])}
             ref={(ref): void => {
               if (ref) {
                 noteEles.set(note.id, ref as HTMLElement);
               }
             }}
           >
-            <blockquote
-              style={{
-                borderLeft: '2px solid rgba(0, 0, 0, 0.2)',
-                fontSize: '.75rem',
-                lineHeight: 1.5,
-                margin: '0 0 8px 0',
-                paddingLeft: '8px',
-                textAlign: 'justify',
+            <div 
+              style={{ 
+                cursor: 'pointer',
+                paddingRight: '24px' // Make room for delete button
               }}
+              onClick={() => jumpToHighlightArea(note.highlightAreas[0])}
             >
-              {note.quote}
-            </blockquote>
-            {note.content}
+              <blockquote
+                style={{
+                  borderLeft: '2px solid rgba(0, 0, 0, 0.2)',
+                  fontSize: '.75rem',
+                  lineHeight: 1.5,
+                  margin: '0 0 8px 0',
+                  paddingLeft: '8px',
+                  textAlign: 'justify',
+                }}
+              >
+                {note.quote}
+              </blockquote>
+              {note.content}
+            </div>
+            
+            {/* Delete button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering the parent onClick
+                deleteNote(note.id);
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#d32f2f',
+                fontSize: '16px',
+                padding: '4px',
+                borderRadius: '4px',
+              }}
+              title="Delete note"
+            >
+              ✕
+            </button>
           </div>
         );
       })}
