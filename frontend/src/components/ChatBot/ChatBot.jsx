@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './ChatBot.css';
 
 const ChatBot = ({ onClose, paperId }) => {
@@ -108,7 +109,11 @@ const ChatBot = ({ onClose, paperId }) => {
       <div className="chatbot-messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`chatbot-message ${msg.sender === 'bot' ? 'bot' : 'user'}`}>
-            {msg.text}
+            {msg.sender === 'bot' ? (
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
       </div>
