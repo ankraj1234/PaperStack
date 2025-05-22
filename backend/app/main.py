@@ -4,19 +4,37 @@ from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+
+from sentence_transformers import SentenceTransformer
+
 from .database import SessionLocal
-from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput, PaperCollectionUpdate
+from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput, PaperCollectionUpdate, UploadRequest
 from .models import Paper, Author, PaperAuthors, Tags, PaperTags, Collection, PaperCollections
 from .utils.keyword_extraction import extract_keyword
-from typing import List, Dict
+
+from typing import List, Dict, Any
 import xml.etree.ElementTree as ET
 import os
 import requests
 import hashlib
+import fitz
+import numpy as np
+import faiss
+import re
+import pickle
 
 GROBID_URL = "http://localhost:8070/api/processFulltextDocument" 
-
 app = FastAPI()
+
+FAISS_INDEX_PATH = "faiss_index.bin"
+METADATA_PATH = "metadata_store.pkl"
+VECTOR_ID_PATH = "current_vector_id.txt"
+
+model = SentenceTransformer('all-mpnet-base-v2')
+dimension = 768
+index = faiss.IndexFlatIP(dimension) 
+metadata_store = {}
+current_vector_id = 0
 
 UPLOAD_PATH = "C:/Users/ar041/ai-paper-system/uploads"
 UPLOAD_DIR = "uploads"
@@ -375,3 +393,220 @@ def delete_collection(collection_name: str, db: Session = Depends(get_db)):
     db.delete(collection)
     db.commit()
     return {"message": f"Collection '{collection_name}' deleted successfully"}
+
+def clean_text(text: str) -> str:
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\n\d+\n', ' ', text)
+    return text.strip()
+
+def chunk_text_paragraphwise(text: str, chunk_size=4000, overlap_sentences=6) -> List[str]:
+    # Split into sentences by punctuation + whitespace
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    
+    chunks = []
+    current_chunk = []
+    current_length = 0
+    
+    for i, sentence in enumerate(sentences):
+        sentence_len = len(sentence)
+        
+        if current_length + sentence_len > chunk_size and current_chunk:
+            # Join current chunk sentences
+            chunk_text = " ".join(current_chunk).strip()
+            chunks.append(chunk_text)
+            
+            # Overlap: keep last N sentences for next chunk
+            overlap = current_chunk[-overlap_sentences:] if overlap_sentences < len(current_chunk) else current_chunk
+            current_chunk = overlap.copy()
+            current_length = sum(len(s) for s in current_chunk) + len(current_chunk) - 1  # add space count
+        else:
+            current_chunk.append(sentence)
+            current_length += sentence_len + 1  # +1 for space
+
+    # Add last chunk if any sentences remain
+    if current_chunk:
+        chunk_text = " ".join(current_chunk).strip()
+        chunks.append(chunk_text)
+    
+    return chunks
+
+def embed_text(texts: List[str]) -> np.ndarray:
+    embeddings = model.encode(
+        texts, 
+        convert_to_numpy=True, 
+        show_progress_bar=False,
+        batch_size=32,
+        normalize_embeddings=True
+    )
+    return embeddings.astype('float32')
+
+def extract_chunks_from_pdf(pdf_path: str) -> List[str]:
+    doc = fitz.open(pdf_path)
+    full_text = ""
+    
+    for page in doc:
+        page_text = page.get_text()
+        if len(page_text.strip()) > 50:  # Skip mostly empty pages
+            full_text += clean_text(page_text) + " "
+    
+    doc.close()
+    
+    chunks = chunk_text_paragraphwise(full_text, chunk_size=2000)
+    return [chunk for chunk in chunks if len(chunk.strip()) > 100]
+
+def paper_exists(paper_id: str) -> bool:
+    for metadata in metadata_store.values():
+        if metadata.get("paper_id") == paper_id:
+            return True
+    return False
+
+def save_index_and_metadata():
+    try:
+        faiss.write_index(index, FAISS_INDEX_PATH)
+        
+        with open(METADATA_PATH, 'wb') as f:
+            pickle.dump(dict(metadata_store), f)
+        
+        with open(VECTOR_ID_PATH, 'w') as f:
+            f.write(str(current_vector_id))
+            
+        print("Index and metadata saved successfully")
+    except Exception as e:
+        print(f"Error saving index and metadata: {e}")
+
+def load_index_and_metadata():
+    global index, metadata_store, current_vector_id
+    
+    try:
+        # Load FAISS index
+        if os.path.exists(FAISS_INDEX_PATH):
+            index = faiss.read_index(FAISS_INDEX_PATH)
+            print(f"Loaded FAISS index with {index.ntotal} vectors")
+        else:
+            print("No existing FAISS index found, starting fresh")
+        
+        # Load metadata store
+        if os.path.exists(METADATA_PATH):
+            with open(METADATA_PATH, 'rb') as f:
+                metadata_store.update(pickle.load(f))
+            print(f"Loaded metadata for {len(metadata_store)} vectors")
+        else:
+            print("No existing metadata found, starting fresh")
+        
+        # Load current vector ID
+        if os.path.exists(VECTOR_ID_PATH):
+            with open(VECTOR_ID_PATH, 'r') as f:
+                current_vector_id = int(f.read().strip())
+            print(f"Loaded current vector ID: {current_vector_id}")
+        else:
+            current_vector_id = 0
+            print("Starting with vector ID: 0")
+            
+    except Exception as e:
+        print(f"Error loading index and metadata: {e}")
+
+@app.post("/upload_paper")
+async def upload_paper(data: UploadRequest):
+    global current_vector_id
+    
+    # Check if paper already exists
+    if paper_exists(data.paper_id):
+        return {"status": "exists", "message": f"Paper with ID '{data.paper_id}' already exists"}
+    
+    try:
+        chunks = extract_chunks_from_pdf(data.pdf_path)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
+    
+    if not chunks:
+        raise HTTPException(status_code=400, detail="No valid text content found in PDF")
+    
+    embeddings = embed_text(chunks)
+    
+    for i, chunk in enumerate(chunks):
+        vector = embeddings[i].reshape(1, -1)
+        index.add(vector)
+        
+        metadata_store[current_vector_id] = {
+            "paper_id": data.paper_id,
+            "text": chunk
+        }
+        current_vector_id += 1
+    
+    # Save to disk after adding new data
+    save_index_and_metadata()
+    
+    return {"status": "success", "chunks_added": len(chunks)}
+
+@app.on_event("startup")
+async def startup_event():
+    load_index_and_metadata()
+
+@app.get("/storage_stats")
+async def get_storage_stats():
+    return {
+        "total_vectors": index.ntotal,
+        "metadata_entries": len(metadata_store),
+        "current_vector_id": current_vector_id,
+        "files_exist": {
+            "faiss_index": os.path.exists(FAISS_INDEX_PATH),
+            "metadata": os.path.exists(METADATA_PATH),
+            "vector_id": os.path.exists(VECTOR_ID_PATH)
+        }
+    }
+
+def search_similar_chunks(query: str, paper_id: str = None, top_k: int = 5) -> List[Dict[str, Any]]:
+    if index.ntotal == 0:
+        return []
+    
+    query_embedding = model.encode([query], convert_to_numpy=True, normalize_embeddings=True)
+    query_vector = query_embedding.astype('float32')
+    
+    if paper_id:
+        # When filtering by paper_id, we need to search through all chunks to find matches
+        # Start with a reasonable number and increase if needed
+        search_k = index.ntotal
+        distances, indices = index.search(query_vector, search_k)
+        
+        results = []
+        for distance, idx in zip(distances[0], indices[0]):
+            if idx == -1:
+                continue
+                
+            metadata = metadata_store.get(idx, {})
+            
+            if metadata.get("paper_id") == paper_id:
+                results.append({
+                    "text": metadata.get("text", ""),
+                    "paper_id": metadata.get("paper_id", ""),
+                    "similarity_score": float(distance)
+                })
+                
+                if len(results) >= top_k:
+                    break
+        
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return results[:top_k]
+    
+    else:
+        distances, indices = index.search(query_vector, top_k)
+        
+        results = []
+        for distance, idx in zip(distances[0], indices[0]):
+            if idx == -1:
+                continue
+                
+            metadata = metadata_store.get(idx, {})
+            results.append({
+                "text": metadata.get("text", ""),
+                "paper_id": metadata.get("paper_id", ""),
+                "similarity_score": float(distance)
+            })
+
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return results[:top_k]
+
+@app.post("/search")
+async def search_papers(query: str, paper_id: str = None, top_k: int = 5):
+    results = search_similar_chunks(query, paper_id, top_k)
+    return {"results": results}

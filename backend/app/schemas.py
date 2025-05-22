@@ -56,3 +56,7 @@ class CollectionOutput(BaseModel):
 class PaperCollectionUpdate(BaseModel):
     paper_id: int
     collections: Dict[str, int]
+
+class UploadRequest(BaseModel):
+    paper_id: str
+    pdf_path: str
