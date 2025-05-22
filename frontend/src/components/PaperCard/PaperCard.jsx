@@ -48,6 +48,30 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
     }
   };
 
+  async function handleUpload(paperId, pdfPath) {
+    const safePath = pdfPath.replace(/\\/g, '\\\\');
+
+    try {
+      const response = await fetch('http://localhost:8000/upload_paper', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paper_id: String(paperId),
+          pdf_path: safePath
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Upload response:', data);
+      return data;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return { error: 'Upload failed' };
+    }
+  };
+
   const toggleCollectionDropdown = (e) => {
     e.stopPropagation();
     setShowCollections(!showCollections);
@@ -91,6 +115,7 @@ function PaperCard({ paper, viewMode, toggleFavorite, updatePaperStatus, deleteP
     e.stopPropagation(); 
     if (onTitleClick) {
       onTitleClick(paper);
+      handleUpload(paper.paper_id, paper.pdf_path);
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css';
 
-const ChatBot = ({ onClose }) => {
+const ChatBot = ({ onClose, paperId }) => {
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hello! How can I help you today?' },
   ]);
@@ -50,14 +50,51 @@ const ChatBot = ({ onClose }) => {
     isResizing.current = true;
   };
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages((msgs) => [...msgs, { sender: 'user', text: input.trim() }]);
+  const sendMessage = async () => {
+    const userInput = input.trim();
+
+    if (!userInput) return;
+
+    setMessages((msgs) => [...msgs, { sender: 'user', text: userInput }]);
     setInput('');
-    setTimeout(() => {
-      setMessages((msgs) => [...msgs, { sender: 'bot', text: `You said: "${input.trim()}"` }]);
-    }, 1000);
+
+    try {
+      const paperIdToUse = paperId; 
+      const topK = 2;     
+
+      console.log(paperId);
+
+      const queryParams = new URLSearchParams({
+        query: userInput,
+        paper_id: paperIdToUse.toString(),
+        top_k: topK.toString(),
+      });         
+
+      const response = await fetch(`http://127.0.0.1:8000/chatbot?${queryParams.toString()}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMessages((msgs) => [
+        ...msgs,
+        { sender: 'bot', text: data || 'No reply from model.' },
+      ]);
+    } catch (error) {
+      console.error('Error talking to chatbot API:', error);
+      setMessages((msgs) => [
+        ...msgs,
+        { sender: 'bot', text: 'Sorry, something went wrong while contacting the chatbot.' },
+      ]);
+    }
   };
+
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

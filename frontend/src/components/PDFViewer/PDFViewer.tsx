@@ -20,6 +20,7 @@ import ChatBot from '../ChatBot/ChatBot';
 
 interface PDFViewerProps {
   pdfPath?: string;
+  paperId?: number; 
 }
 
 interface Note {
@@ -36,7 +37,7 @@ interface NotesMap {
 
 const STORAGE_KEY = 'pdf_viewer_notes';
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '', paperId }) => {
   const [message, setMessage] = React.useState('');
   // Store notes for each PDF path
   const [allNotes, setAllNotes] = React.useState<NotesMap>(() => {
@@ -121,7 +122,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
     // Use a regular DOM ref instead of React.useRef to avoid eslint warnings
     let textareaElement: HTMLTextAreaElement | null = null;
     
-    // We'll focus manually after render instead of using useEffect
     setTimeout(() => {
       if (textareaElement) {
         textareaElement.focus();
@@ -401,7 +401,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath = '' }) => {
         🤖
       </button>
 
-      {isChatOpen && <ChatBot onClose={toggleChat} />}
+      {isChatOpen && <ChatBot onClose={toggleChat} paperId={paperId} />}
     </div>
   );
 };

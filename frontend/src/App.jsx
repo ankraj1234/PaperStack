@@ -77,7 +77,10 @@ function HomePage(props) {
             )}
 
             {activeTab && activeTab.content === 'pdf' && (
-              <PDFViewer pdfPath={activeTab.pdfPath} />
+              <PDFViewer 
+                pdfPath={activeTab.pdfPath} 
+                paperId={activeTab.id}
+              />
             )}
           </div>
         </div>

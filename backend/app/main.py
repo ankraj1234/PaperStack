@@ -11,8 +11,9 @@ from .database import SessionLocal
 from .schemas import PaperIDResponse, UpdateStatus, UpdateFavouriteStatus, PaperOutput, AuthorOutput, PaperInput, CollectionOutput, PaperCollectionUpdate, UploadRequest
 from .models import Paper, Author, PaperAuthors, Tags, PaperTags, Collection, PaperCollections
 from .utils.keyword_extraction import extract_keyword
+from .utils.chatbot import answer_user_query
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import xml.etree.ElementTree as ET
 import os
 import requests
@@ -606,7 +607,16 @@ def search_similar_chunks(query: str, paper_id: str = None, top_k: int = 5) -> L
         results.sort(key=lambda x: x["similarity_score"], reverse=True)
         return results[:top_k]
 
-@app.post("/search")
-async def search_papers(query: str, paper_id: str = None, top_k: int = 5):
-    results = search_similar_chunks(query, paper_id, top_k)
-    return {"results": results}
+@app.post("/chatbot")
+async def search_papers(query: str, paper_id: Optional[str] = None, top_k: int = 2):
+    try:
+        # Step 1: Retrieve top sections
+        results = search_similar_chunks(query, paper_id, top_k)
+
+        # Step 2: Answer the query using top sections
+        answer = answer_user_query(query=query, top_sections=results)
+
+        return answer
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

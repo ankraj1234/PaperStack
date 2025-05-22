@@ -1,3 +1,6 @@
 backend/app/.env
 uploads/
 paper/
+faiss_index.bin
+metadata_store.pkl
+current_vector_id.txt
