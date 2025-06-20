@@ -3,6 +3,7 @@
 
 PaperStack is an open-source AI-driven research assistant that helps you organize, annotate, and understand academic papers with ease. From intelligent metadata extraction to interactive paper-specific chat, PaperStack transforms your research workflow into a seamless, searchable, and smart experience—all starting with a single PDF upload.
 
+![Demo Preview](demo.gif)
 ---
 
 ## ✨ Features
