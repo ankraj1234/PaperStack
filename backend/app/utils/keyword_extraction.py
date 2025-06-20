@@ -5,9 +5,15 @@ from crewai import Agent, Task, Crew
 from crewai import LLM
 import os
 import json
+import sys
 from langchain_groq import ChatGroq
 
-os.environ['GROQ_API_KEY'] = "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" #Add groq API here
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import GROQ_API_KEY
+
+if not GROQ_API_KEY:
+    raise EnvironmentError("GROQ_API_KEY not found in .env file")
+
 
 from crewai import Agent, Task
 
@@ -15,7 +21,8 @@ class KeywordExtractorCrew:
     def __init__(self):
         self.llm = ChatGroq(
             model="groq/gemma2-9b-it",
-            api_key=os.getenv("GROQ_API_KEY")
+            api_key=os.environ['GROQ_API_KEY']
+            # api_key=GROQ_API_KEY
         ) 
 
     def keyword_extraction_agent(self):

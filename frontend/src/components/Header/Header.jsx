@@ -12,7 +12,7 @@ function Header({ onAddPaperClick, sortOrder, searchQuery, setSearchQuery, setAc
       <div className="header-left">
         <div className="logo">
           <i className="logo-icon">📄</i>
-          <span className="logo-text">PaperOrganizer</span>
+          <span className="logo-text">PaperStack</span>
         </div>
       </div>
       <div className="search-container">
