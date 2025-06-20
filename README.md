@@ -35,7 +35,7 @@ PaperStack is an open-source AI-driven research assistant that helps you organiz
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ankraj1234/Research-Paper-State1.git
+git clone https://github.com/ankraj1234/PaperStack.git
 cd paperstack
 
 # 2. Start GROBID (for metadata extraction)
