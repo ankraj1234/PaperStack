@@ -8,10 +8,8 @@ import json
 import sys
 from langchain_groq import ChatGroq
 
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# from config import GROQ_API_KEY
-
-os.environ['GROQ_API_KEY'] = "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"
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import GROQ_API_KEY
 
 from crewai import Agent, Task
 
@@ -19,7 +17,7 @@ class ContextAnswererCrew:
     def __init__(self):
         self.llm = ChatGroq(
             model="groq/gemma2-9b-it",
-            api_key=os.environ['GROQ_API_KEY']
+            api_key=GROQ_API_KEY
         ) 
 
     def context_answering_agent(self):
