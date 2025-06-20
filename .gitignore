@@ -1,4 +1,8 @@
 backend/app/.env
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/utils/__pycache__/
+backend/app/utils/keyword/__pycache__/
 uploads/
 paper/
 faiss_index.bin
