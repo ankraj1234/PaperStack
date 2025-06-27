@@ -9,26 +9,13 @@ PaperStack is an open-source AI-driven research assistant that helps you organiz
 
 ## ✨ Features
 
-- **Metadata Extraction**  
-  Automatically extracts title, authors, abstract, keywords, affiliations, etc. using GROBID.
+- **Metadata Extraction**: Extracts title, authors, abstract, keywords, and affiliations using GROBID.  
+- **Organized Library**: Upload, manage, and group research papers by tags, topics, or folders.  
+- **Smart PDF Annotation**: Read and highlight papers in-browser using @react-pdf-viewer.  
+- **Chat with Your Paper**: Ask context-aware questions with RAG-powered responses.  
+- **Keyword Standardization**: Maintains consistent tagging for improved search and grouping.  
+- **Custom Upload Workflow**: Upload PDFs, extract metadata, and start interacting in a single flow.
 
-- **Organized Library**  
-  Upload and manage research papers.  
-  Group papers by tags, topics, or folders.
-
-- **Smart PDF Annotation**  
-  Read and highlight papers directly in your browser.  
-  Built with `@react-pdf-viewer` for smooth navigation and markup.
-
-- **Chat with Your Paper**  
-  Ask questions about the paper's content.  
-  Section-aware responses powered by retrieval-augmented generation (RAG).
-
-- **Keyword Standardization**  
-  Ensures consistent tagging across papers for better search and grouping.
-
-- **Custom Upload Workflow**  
-  Easily upload PDFs, extract metadata, and begin interaction—all in one flow.
 
 ---
 
